@@ -1,0 +1,29 @@
+id: java-entity-field-missing-column-marker
+language: Java
+severity: error
+message: Entity field must declare one of @Id, @Column, or @Transient.
+files:
+  - '**/entity/*.java'
+rule:
+  all:
+    - kind: field_declaration
+    - inside:
+        kind: class_declaration
+        stopBy: end
+        has:
+          stopBy: end
+          kind: annotation
+          regex: '^@Table\b'
+    - regex: 'private'
+    - not:
+        regex: '\bserialVersionUID\b'
+    - not:
+        regex: '\bstatic\b\s+\bfinal\b'
+    - not:
+        has:
+          stopBy: end
+          any:
+            - kind: marker_annotation
+              regex: '^@(?:Id|Column|Transient)\b'
+            - kind: annotation
+              regex: '^@(?:Id|Column|Transient)\b'

@@ -1,0 +1,25 @@
+const <FEATURE>_SERVICE_PREFIX = '/<servicePrefix>';
+const <FEATURE>_MOCK_PREFIX = '/_mock/<module>';
+
+export const get<Feature>ServicePrefix = () => <FEATURE>_SERVICE_PREFIX;
+
+export const get<Feature>MockOrigin = () =>
+  typeof window === 'undefined' ? '' : window.location.origin;
+
+export const get<Feature>MockPrefix = () =>
+  `${get<Feature>MockOrigin()}${<FEATURE>_MOCK_PREFIX}`;
+
+export const is<Feature>MockRequestMode = () =>
+  process.env.<MODULE>_USE_MOCK !== 'false';
+
+export const get<Feature>ApiPrefix = () =>
+  is<Feature>MockRequestMode()
+    ? get<Feature>MockPrefix()
+    : get<Feature>ServicePrefix();
+
+export const get<Feature>RequestPrefix = get<Feature>ApiPrefix;
+
+export const build<Feature>ServiceUrl = (path = '') => {
+  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+  return `${get<Feature>ApiPrefix()}${normalizedPath}`;
+};

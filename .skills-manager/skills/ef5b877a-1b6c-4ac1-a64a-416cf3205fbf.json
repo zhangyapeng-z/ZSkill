@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "skill_id": "ef5b877a-1b6c-4ac1-a64a-416cf3205fbf",
+  "path": "skill-scanner-2",
+  "path_key": "skill-scanner-2",
+  "enabled": true,
+  "tags": [],
+  "source": {
+    "type": "local",
+    "ref": null,
+    "subpath": null,
+    "branch": null
+  }
+}

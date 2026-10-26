@@ -1,0 +1,12 @@
+id: java-controller-api-tags-no-chinese
+language: Java
+severity: error
+message: '@Api tags must not contain Chinese characters.'
+rule:
+  all:
+    - any:
+        - kind: marker_annotation
+          regex: '^@Api\b'
+        - kind: annotation
+          regex: '^@Api\b'
+    - regex: '(?s)\btags\s*=\s*(?:"[^"]*[\p{Han}][^"]*"|\{[^}]*"[^"]*[\p{Han}][^"]*"[^}]*\})'

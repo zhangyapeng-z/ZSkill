@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "skill_id": "f0c2e4e7-5e58-45f5-a011-4a767f500999",
+  "path": "product-manager-skills",
+  "path_key": "product-manager-skills",
+  "enabled": true,
+  "tags": [],
+  "source": {
+    "type": "local",
+    "ref": null,
+    "subpath": null,
+    "branch": null
+  }
+}

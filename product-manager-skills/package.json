@@ -1,0 +1,44 @@
+{
+  "name": "product-manager-skills",
+  "version": "7.8.8",
+  "displayName": "产品经理技能包",
+  "description": "资深产品经理技能包：诊断 SaaS 指标、评审 PRD、规划路线图、开展用户研究、指导 PM 职业转型，并压力测试 AI 产品决策。六大知识领域、12 个模板、30+ 框架。",
+  "description_en": "Senior product manager skill pack: diagnose SaaS metrics, critique PRDs, plan roadmaps, run discovery research, coach PM career transitions, and stress-test AI product decisions.",
+  "keywords": [
+    "product-manager-skills",
+    "agent-skill",
+    "product-manager",
+    "product-management",
+    "pm",
+    "prd",
+    "user-story",
+    "roadmap",
+    "product-strategy",
+    "discovery",
+    "positioning",
+    "career-coaching",
+    "saas-metrics",
+    "ai-agent",
+    "skill-md"
+  ],
+  "homepage": "https://github.com/Digidai/product-manager-skills",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Digidai/product-manager-skills.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Digidai/product-manager-skills/issues"
+  },
+  "author": "Gene Dai <gene@genedai.me> (https://genedai.me/)",
+  "license": "CC-BY-NC-SA-4.0",
+  "files": [
+    "SKILL.md",
+    "knowledge/",
+    "templates/",
+    "examples/",
+    "STARTER-PROMPTS.md",
+    "README.zh-CN.md",
+    "README.md",
+    "LICENSE"
+  ]
+}

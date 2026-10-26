@@ -1,0 +1,11 @@
+{
+  "name": "Exa 企业调研",
+  "installedAt": 1789128048369,
+  "source": "marketplace",
+  "version": "1.0.0",
+  "skillId": "skill_2095731542466916352",
+  "iconSource": "letter:auto",
+  "description_zh": "用 Exa 搜索做企业调研：查找公司信息、竞争对手、新闻、推文、财务数据、LinkedIn 档案，并批量构建公司名录。强制约束：只使用 Exa 的 web_search_advanced 工具，不要使用 web_search_exa 或其他 Exa 工具；且绝不在主上下文里直接跑 Exa 搜索，必须派发 Task 子代理执行搜索与提炼，只回传精简的 JSON 或简短 Markdown，避免污染主上下文。",
+  "description_en": "Company research powered by Exa search. Finds company profiles, competitors, news, tweets, financials and LinkedIn profiles, and builds company lists in bulk. Two hard constraints apply: only use the web_search_advanced tool from Exa, never web_search_exa or any other Exa tool, and never run Exa searches in the main context. Always spawn Task subagents instead, which run the search internally, process results with model intelligence and return only distilled output as compact JSON or brief markdown, keeping the main context clean.",
+  "installedContentHash": "sha256:cadff7b5baad2b783536648e6c96933889d1a29348dcecbfa305611a310b9b6d"
+}

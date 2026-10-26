@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "skill_id": "2c2ccf3b-2d59-430c-b208-5cdb83f1f8e7",
+  "path": "microservice-splitter",
+  "path_key": "microservice-splitter",
+  "enabled": true,
+  "tags": [],
+  "source": {
+    "type": "local",
+    "ref": null,
+    "subpath": null,
+    "branch": null
+  }
+}

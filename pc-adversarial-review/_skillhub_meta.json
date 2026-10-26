@@ -1,0 +1,11 @@
+{
+  "name": "对抗性审查",
+  "installedAt": 1789296031428,
+  "source": "marketplace",
+  "version": "3.1.0",
+  "skillId": "skill_2095620947045875712",
+  "iconSource": "https://openplatform-cdn.codebuddy.cn/public/common/capability_cover/99999aa1-4799-4fbc-9f33-e8c74eb7a0a7/76acee71-d26a-4ba1-952b-e668e5d3b8a5.png",
+  "iconLocalPath": "C:\\Users\\PC\\.workbuddy\\skills\\pc-adversarial-review\\_icon.png",
+  "iconDownloadedFrom": "https://openplatform-cdn.codebuddy.cn/public/common/capability_cover/99999aa1-4799-4fbc-9f33-e8c74eb7a0a7/76acee71-d26a-4ba1-952b-e668e5d3b8a5.png",
+  "installedContentHash": "sha256:d5c3082e8053ee82c649e4e3adea397e6b94c71d99ce05d4e6810e53ce845e73"
+}

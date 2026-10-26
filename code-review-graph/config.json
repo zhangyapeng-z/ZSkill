@@ -1,0 +1,15 @@
+{
+  "name": "code-review-graph",
+  "displayName": "代码 代码审查 调用图谱",
+  "encoding_fallback": [
+    "utf-8",
+    "gbk",
+    "gb18030"
+  ],
+  "features": [
+    "cli",
+    "selftest",
+    "dry-run",
+    "error-handling"
+  ]
+}

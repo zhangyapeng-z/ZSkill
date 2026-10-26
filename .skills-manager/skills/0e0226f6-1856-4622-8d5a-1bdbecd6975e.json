@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "skill_id": "0e0226f6-1856-4622-8d5a-1bdbecd6975e",
+  "path": "text-to-cad-srdf",
+  "path_key": "text-to-cad-srdf",
+  "enabled": true,
+  "tags": [],
+  "source": {
+    "type": "local",
+    "ref": null,
+    "subpath": null,
+    "branch": null
+  }
+}

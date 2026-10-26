@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "skill_id": "0a28e3a9-d5b7-480b-a916-9b58ac1a6d5d",
+  "path": "front-hzero-common-components",
+  "path_key": "front-hzero-common-components",
+  "enabled": true,
+  "tags": [],
+  "source": {
+    "type": "local",
+    "ref": null,
+    "subpath": null,
+    "branch": null
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "skill_id": "88470919-13fa-4923-b765-624071f04969",
+  "path": "html-deploy",
+  "path_key": "html-deploy",
+  "enabled": true,
+  "tags": [],
+  "source": {
+    "type": "local",
+    "ref": null,
+    "subpath": null,
+    "branch": null
+  }
+}

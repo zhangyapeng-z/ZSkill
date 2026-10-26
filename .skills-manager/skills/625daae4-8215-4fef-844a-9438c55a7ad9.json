@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "skill_id": "625daae4-8215-4fef-844a-9438c55a7ad9",
+  "path": "开发计划制定",
+  "path_key": "开发计划制定",
+  "enabled": true,
+  "tags": [],
+  "source": {
+    "type": "local",
+    "ref": null,
+    "subpath": null,
+    "branch": null
+  }
+}

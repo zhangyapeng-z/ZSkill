@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "skill_id": "5aa3baae-33b2-4612-8a25-2fa779db55bb",
+  "path": "text-to-cad-step-parts",
+  "path_key": "text-to-cad-step-parts",
+  "enabled": true,
+  "tags": [],
+  "source": {
+    "type": "local",
+    "ref": null,
+    "subpath": null,
+    "branch": null
+  }
+}

@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTML to PDF 测试文档</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: "PingFang SC", "Microsoft YaHei", "SimHei", sans-serif;
+            line-height: 1.8;
+            color: #333;
+            padding: 40px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #1a73e8;
+            border-bottom: 3px solid #1a73e8;
+            padding-bottom: 15px;
+            margin-bottom: 30px;
+        }
+        h2 {
+            color: #2c3e50;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            border-left: 5px solid #1a73e8;
+            padding-left: 15px;
+        }
+        p {
+            margin-bottom: 15px;
+        }
+        .highlight {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        th {
+            background: #1a73e8;
+            color: white;
+            padding: 12px;
+            text-align: left;
+        }
+        td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .card {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            page-break-inside: avoid;
+        }
+        ul, ol {
+            margin: 15px 0;
+            padding-left: 30px;
+        }
+        li {
+            margin: 8px 0;
+        }
+        @media print {
+            body {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>📄 HTML to PDF 测试文档</h1>
+    
+    <div class="highlight">
+        <p><strong>🎯 测试目的：</strong>验证 <code>html-to-pdf</code> 技能是否能正确转换以下内容：</p>
+        <ul>
+            <li>✅ 中文显示（UTF-8 编码）</li>
+            <li>✅ CSS 样式（颜色、字体、布局）</li>
+            <li>✅ 表格和列表</li>
+            <li>✅ 卡片式布局</li>
+            <li>✅ 分页控制</li>
+        </ul>
+    </div>
+    
+    <h2>1. 中文支持测试</h2>
+    <p>这是一段中文测试文字，包含常用的汉字：</p>
+    <p>春江潮水连海平，海上明月共潮生。滟滟随波千万里，何处春江无月明。</p>
+    <p>English text is also supported: The quick brown fox jumps over the lazy dog.</p>
+    
+    <h2>2. 表格测试</h2>
+    <table>
+        <tr>
+            <th>方案</th>
+            <th>中文支持</th>
+            <th>CSS 支持</th>
+            <th>推荐度</th>
+        </tr>
+        <tr>
+            <td><strong>Playwright</strong></td>
+            <td>✅ 完美</td>
+            <td>✅ 完美</td>
+            <td>⭐⭐⭐⭐⭐</td>
+        </tr>
+        <tr>
+            <td>weasyprint</td>
+            <td>✅ 完美</td>
+            <td>🟡 部分</td>
+            <td>⭐⭐⭐</td>
+        </tr>
+        <tr>
+            <td>wkhtmltopdf</td>
+            <td>🟡 需配置</td>
+            <td>🟡 部分</td>
+            <td>⭐⭐</td>
+        </tr>
+    </table>
+    
+    <h2>3. 卡片布局测试</h2>
+    
+    <div class="card">
+        <h3>🎯 优势 1：完美的中文支持</h3>
+        <p>Playwright 使用真实的 Chromium 浏览器引擎渲染页面，因此能够完美支持中文、日文、韩文等 Unicode 字符。</p>
+    </div>
+    
+    <div class="card">
+        <h3>🎨 优势 2：完整的 CSS 支持</h3>
+        <p>支持现代 CSS 特性，包括：</p>
+        <ul>
+            <li>Flexbox 和 Grid 布局</li>
+            <li>自定义字体（@font-face）</li>
+            <li>CSS 变量和 calc() 函数</li>
+            <li>媒体查询（@media print）</li>
+        </ul>
+    </div>
+    
+    <div class="card">
+        <h3>🚀 优势 3：JavaScript 支持</h3>
+        <p>如果 HTML 中包含 JavaScript 动态生成的内容，Playwright 会等待页面完全渲染后再生成 PDF，确保内容完整性。</p>
+    </div>
+    
+    <h2>4. 列表测试</h2>
+    
+    <h3>无序列表</h3>
+    <ul>
+        <li>项目 1：安装 Python 依赖</li>
+        <li>项目 2：下载 Chromium 浏览器</li>
+        <li>项目 3：运行转换脚本</li>
+        <li>项目 4：验证输出 PDF</li>
+    </ul>
+    
+    <h3>有序列表</h3>
+    <ol>
+        <li>第一步：检查依赖是否已安装</li>
+        <li>第二步：准备 HTML 文件（确保中文编码正确）</li>
+        <li>第三步：运行转换命令</li>
+        <li>第四步：检查生成的 PDF 文件</li>
+    </ol>
+    
+    <h2>5. 分页控制测试</h2>
+    <p>以下内容使用了 <code>page-break-inside: avoid;</code> 样式，避免卡片在分页时被切断。</p>
+    
+    <div class="card" style="page-break-inside: avoid;">
+        <h3>📌 重要提示</h3>
+        <p>如果你在 PDF 中发现表格或卡片被分页切断，可以在 CSS 中添加：</p>
+        <pre>table, .card, .avoid-break {
+    page-break-inside: avoid;
+}</pre>
+        <p>这样可以确保元素在打印时保持完整。</p>
+    </div>
+    
+    <div class="highlight">
+        <p><strong>✅ 测试完成！</strong></p>
+        <p>如果你能看到这份文档的 PDF 版本，并且：</p>
+        <ol>
+            <li>中文显示正常（无乱码）</li>
+            <li>表格样式正确（蓝色表头、条纹行）</li>
+            <li>卡片布局完整（灰色背景、圆角边框）</li>
+            <li>分页时卡片未被切断</li>
+        </ol>
+        <p>那么恭喜你，<code>html-to-pdf</code> 技能已经成功安装并运行！</p>
+    </div>
+    
+    <hr style="margin: 40px 0;">
+    
+    <p style="text-align: center; color: #666; font-size: 14px;">
+        HTML to PDF Skill - 测试文档<br>
+        生成时间：2026-06-04
+    </p>
+</body>
+</html>

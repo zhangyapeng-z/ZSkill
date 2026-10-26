@@ -1,0 +1,4 @@
+interface:
+  display_name: "HTML 原型转 HZERO 页面"
+  short_description: "将 HTML 原型落地为产品工程页面，复用主题、演示数据与路由并验证交互"
+  default_prompt: "使用 $html-to-hzero-demo 将我提供的 HTML 原型转换为当前 HZERO 工程的售前页面，完成验证并输出菜单 URL。"

@@ -1,0 +1,82 @@
+// HZEROJS Umi submodule config/router.ts template for list + dynamic detail page modes.
+//
+// Use when:
+// - routeOpenMode=dynamic-tab is confirmed by Open Interaction Confirm or an explicit
+//   interaction contract, and
+// - create / view / edit should be separate HZERO system tabs, and
+// - page identity is expressed by path params instead of only query/search.
+//
+// Note:
+// - "Per-record independent tab" applies to view/edit routes with a record id.
+// - The create route has no record id; it may still be a separate dynamic system tab when
+//   confirmed, but do not derive a per-record dynamic key for create.
+//
+// Placeholder replacement guide:
+// - __FEATURE_ROUTE_PREFIX__: confirmed full feature route prefix without leading slash. Example: prm/requisitions.
+// - __LIST_TITLE__: Chinese temporary route title for list. Example: 采购申请管理.
+// - __CREATE_TITLE__: Chinese temporary route title for create. Example: 新建采购申请.
+// - __VIEW_TITLE__: Chinese temporary route title for view. Example: 采购申请详情.
+// - __EDIT_TITLE__: Chinese temporary route title for edit. Example: 编辑采购申请.
+// - Runtime openTab.title is separate from these route titles. Dynamic per-record tabs may
+//   display a confirmed business number/name, but must not use __DETAIL_ID_PARAM__, id, headerId,
+//   encrypted id, or database primary key as the user-visible title by default.
+// - __LIST_COMPONENT_PATH__: src/pages Umi pages-root list component path. Examples: Requisitions/List, ./Requisitions/List, @/pages/Requisitions/List.
+// - __DETAIL_COMPONENT_PATH__: src/pages Umi pages-root detail component path. Examples: Requisitions/Detail, ./Requisitions/Detail, @/pages/Requisitions/Detail.
+// - __DETAIL_ID_PARAM__: route param name for record identity. Example: requisitionHeaderId.
+// - __DWS_ENABLED__: true only when project evidence requires dynamic routes to also split by search/query.
+//   Use false or remove dws when path already carries the full tab identity.
+//
+// Rules:
+// - When the feature has a list page, keep list/create/view/edit under one parent routes container.
+// - Parent route is only a grouping/feature boundary and must not have component.
+// - Never use ../src/pages/... from config/router.ts, and never use ./routes/... for src/routes pages.
+// - Do not emit exact by default; add exact only when project evidence requires it and runtime route check verifies child matching.
+// - The list child route must use /list, for example /prm/requisition/list. Do not duplicate the
+//   parent path as the list child path; HZERO route merging can make detail/create/edit children 404.
+// - Each dynamic detail route must be directly routable; openTab.key and openTab.path should be
+//   the same concrete path, for example /prm/requisition/detail/view/1001.
+// - For create, openTab.key and openTab.path should be the concrete create path, for example
+//   /prm/requisition/create. Do not append a fake record id or unregistered suffix.
+// - dws is not required when path already carries page mode and record id. Set dws: true only when
+//   project evidence requires dynamic routes to also split by search/query.
+const routes = [
+  {
+    path: '/__FEATURE_ROUTE_PREFIX__',
+    authorized: true,
+    title: '__LIST_TITLE__',
+    routes: [
+      {
+        path: '/__FEATURE_ROUTE_PREFIX__/list',
+        component: '__LIST_COMPONENT_PATH__',
+        authorized: true,
+        title: '__LIST_TITLE__',
+      },
+      {
+        path: '/__FEATURE_ROUTE_PREFIX__/create',
+        component: '__DETAIL_COMPONENT_PATH__',
+        authorized: true,
+        title: '__CREATE_TITLE__',
+        mode: 'dynamic',
+        dws: __DWS_ENABLED__,
+      },
+      {
+        path: '/__FEATURE_ROUTE_PREFIX__/detail/view/:__DETAIL_ID_PARAM__',
+        component: '__DETAIL_COMPONENT_PATH__',
+        authorized: true,
+        title: '__VIEW_TITLE__',
+        mode: 'dynamic',
+        dws: __DWS_ENABLED__,
+      },
+      {
+        path: '/__FEATURE_ROUTE_PREFIX__/detail/edit/:__DETAIL_ID_PARAM__',
+        component: '__DETAIL_COMPONENT_PATH__',
+        authorized: true,
+        title: '__EDIT_TITLE__',
+        mode: 'dynamic',
+        dws: __DWS_ENABLED__,
+      },
+    ],
+  },
+];
+
+export default routes;

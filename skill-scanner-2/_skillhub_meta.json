@@ -1,0 +1,11 @@
+{
+  "slug": "skill-scanner-v1",
+  "name": "skill-scanner",
+  "version": "1.0.0",
+  "installedAt": 1787315355816,
+  "source": "skillhub",
+  "iconSource": "https://cloudcache.tencent-cloud.com/qcloud/ui/static/other_external_resource/a4e49550-e527-4406-b761-c4f2e607b757.png",
+  "iconLocalPath": "C:\\Users\\PC\\.workbuddy\\skills\\skill-scanner-v1__skillhub\\_icon.png",
+  "iconDownloadedFrom": "https://cloudcache.tencent-cloud.com/qcloud/ui/static/other_external_resource/a4e49550-e527-4406-b761-c4f2e607b757.png",
+  "installedContentHash": "sha256:b3accba9245d7f352321a6eb9e507c3968e1725061e28401c6f239b3cc69a291"
+}

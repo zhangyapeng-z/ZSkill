@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "skill_id": "0ab0a748-213c-4e0a-83d3-836464de1749",
+  "path": "ms-review-toolkit",
+  "path_key": "ms-review-toolkit",
+  "enabled": true,
+  "tags": [],
+  "source": {
+    "type": "local",
+    "ref": null,
+    "subpath": null,
+    "branch": null
+  }
+}

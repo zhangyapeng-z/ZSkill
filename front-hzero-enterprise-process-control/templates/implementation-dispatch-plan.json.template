@@ -1,0 +1,42 @@
+{
+  "schemaVersion": "1.0",
+  "executionGroupId": "G2",
+  "groupDispatchId": "GD-G2-<timestamp-or-stable-id>",
+  "groupType": "parallel",
+  "dispatchMode": "parallel-slice",
+  "pathBaseline": "frontend-root-relative",
+  "evidencePathBaseline": "feature-root-relative",
+  "contractFidelityRequired": true,
+  "targetRoot": "<frontend-root>",
+  "packageDir": "packages/example",
+  "todos": [
+    {
+      "todoId": "G2-SL-LIST",
+      "scopeType": "single-slice",
+      "currentTodo": "Implement SL-LIST",
+      "delegatedAgent": "frontend-implementation-agent",
+      "sliceId": "SL-LIST",
+      "taskIds": ["FE-003"],
+      "integrationTaskId": "FE-006",
+      "writeFiles": ["packages/example/src/pages/List/index.tsx"],
+      "evidenceWriteFiles": ["evidence/contract-fidelity/slices/SL-LIST.json"],
+      "sharedPrerequisiteFiles": [],
+      "readOnlySharedFiles": ["packages/example/src/utils/servicePrefix.ts"]
+    },
+    {
+      "todoId": "G2-SL-DETAIL",
+      "scopeType": "single-slice",
+      "currentTodo": "Implement SL-DETAIL",
+      "delegatedAgent": "frontend-implementation-agent",
+      "sliceId": "SL-DETAIL",
+      "taskIds": ["FE-004"],
+      "integrationTaskId": "FE-006",
+      "writeFiles": ["packages/example/src/pages/Detail/index.tsx"],
+      "evidenceWriteFiles": ["evidence/contract-fidelity/slices/SL-DETAIL.json"],
+      "sharedPrerequisiteFiles": [],
+      "readOnlySharedFiles": ["packages/example/src/utils/servicePrefix.ts"]
+    }
+  ],
+  "serialFallbackReason": null,
+  "affectedSliceIds": []
+}

@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "skill_id": "980be4f3-a922-4ec5-b42e-53deed70af77",
+  "path": "text-to-cad-cad",
+  "path_key": "text-to-cad-cad",
+  "enabled": true,
+  "tags": [],
+  "source": {
+    "type": "local",
+    "ref": null,
+    "subpath": null,
+    "branch": null
+  }
+}

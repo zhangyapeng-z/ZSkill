@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "skill_id": "d0ca3cdf-7bef-42c8-ad9e-853e262f4539",
+  "path": "front-hzero-mock-request",
+  "path_key": "front-hzero-mock-request",
+  "enabled": true,
+  "tags": [],
+  "source": {
+    "type": "local",
+    "ref": null,
+    "subpath": null,
+    "branch": null
+  }
+}

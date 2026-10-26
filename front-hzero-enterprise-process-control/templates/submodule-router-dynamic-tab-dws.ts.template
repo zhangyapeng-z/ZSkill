@@ -1,0 +1,66 @@
+// HZEROJS Umi submodule config/router.ts template for list + dynamic tabs split by search/query.
+//
+// Use only when:
+// - routeOpenMode=dynamic-tab is confirmed by Open Interaction Confirm or an explicit
+//   interaction contract, and
+// - the user or confirmed project contract explicitly requires same pathname + different
+//   search/query to open separate HZERO system tabs.
+//
+// Prefer path params for new detail/edit/create page identity. This dws template is for
+// project compatibility or explicitly confirmed query-state tab identity.
+//
+// Placeholder replacement guide:
+// - __FEATURE_ROUTE_PREFIX__: confirmed full feature route prefix without leading slash. Example: prm/requisitions.
+// - __LIST_TITLE__: Chinese temporary route title for list. Example: 采购申请管理.
+// - __DETAIL_TITLE__: Chinese temporary route title for detail. Example: 采购申请详情.
+// - Runtime openTab.title is separate from this route title. If the dws tab title identifies
+//   a record, use a confirmed business display field such as requisitionNumber/name; do not use
+//   recordId, id, headerId, encrypted id, or database primary key as the visible title by default.
+// - __LIST_COMPONENT_PATH__: src/pages Umi pages-root list component path. Examples: PrmRequisition/List, ./PrmRequisition/List, @/pages/PrmRequisition/List.
+// - __DETAIL_COMPONENT_PATH__: src/pages Umi pages-root detail component path. Examples: PrmRequisition/Detail, ./PrmRequisition/Detail, @/pages/PrmRequisition/Detail.
+//
+// Runtime navigation example:
+// openTab({
+//   key: `/__FEATURE_ROUTE_PREFIX__/detail?recordId=${recordId}`,
+//   path: `/__FEATURE_ROUTE_PREFIX__/detail?recordId=${recordId}`,
+//   title: requisitionNumber || '__DETAIL_TITLE__',
+// });
+//
+// Rules:
+// - When the feature has a list page, keep list and detail under one parent routes container.
+// - Parent route is only a grouping/feature boundary and must not have component.
+// - Never use ../src/pages/... from config/router.ts, and never use ./routes/... for src/routes pages.
+// - Do not emit exact by default; add exact only when project evidence requires it and runtime route check verifies child matching.
+// - The list child route must use /list, for example /prm/requisition/list. Do not duplicate the
+//   parent path as the list child path; HZERO route merging can make detail children 404.
+// - key and path must be identical concrete URLs including the query that makes the tab unique.
+// - dws: true is required when the same pathname must split tabs by search/query.
+// - query/search may carry project-confirmed tab identity only in this dws compatibility mode.
+// - Do not use this template for current-tab behavior or parent-key openTab reuse.
+// - If there is no list route in this feature, the detail child can be simplified to a direct
+//   top-level route with the same mode/dws settings after project evidence confirms it.
+const routes = [
+  {
+    path: '/__FEATURE_ROUTE_PREFIX__',
+    authorized: true,
+    title: '__LIST_TITLE__',
+    routes: [
+      {
+        path: '/__FEATURE_ROUTE_PREFIX__/list',
+        component: '__LIST_COMPONENT_PATH__',
+        authorized: true,
+        title: '__LIST_TITLE__',
+      },
+      {
+        path: '/__FEATURE_ROUTE_PREFIX__/detail',
+        component: '__DETAIL_COMPONENT_PATH__',
+        authorized: true,
+        title: '__DETAIL_TITLE__',
+        mode: 'dynamic',
+        dws: true,
+      },
+    ],
+  },
+];
+
+export default routes;

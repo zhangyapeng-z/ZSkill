@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "skill_id": "091d08fa-44e8-4eac-871b-b16b213ac75c",
+  "path": "pptx-generator",
+  "path_key": "pptx-generator",
+  "enabled": true,
+  "tags": [],
+  "source": {
+    "type": "local",
+    "ref": null,
+    "subpath": null,
+    "branch": null
+  }
+}

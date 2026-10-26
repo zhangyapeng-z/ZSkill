@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "skill_id": "a2adedcc-5344-4bbd-a0c1-b5de50e086b4",
+  "path": "biaoshu-writer",
+  "path_key": "biaoshu-writer",
+  "enabled": true,
+  "tags": [],
+  "source": {
+    "type": "local",
+    "ref": null,
+    "subpath": null,
+    "branch": null
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "skill_id": "0fa48fe2-a4e1-45c1-a4bd-a22c82ea9112",
+  "path": "代码生成",
+  "path_key": "代码生成",
+  "enabled": true,
+  "tags": [],
+  "source": {
+    "type": "local",
+    "ref": null,
+    "subpath": null,
+    "branch": null
+  }
+}

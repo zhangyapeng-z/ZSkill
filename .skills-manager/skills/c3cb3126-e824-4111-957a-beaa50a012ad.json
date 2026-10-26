@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "skill_id": "c3cb3126-e824-4111-957a-beaa50a012ad",
+  "path": "arch-quality-checker",
+  "path_key": "arch-quality-checker",
+  "enabled": true,
+  "tags": [],
+  "source": {
+    "type": "local",
+    "ref": null,
+    "subpath": null,
+    "branch": null
+  }
+}

@@ -1,0 +1,13 @@
+id: java-permission-missing-level
+language: Java
+severity: error
+message: '@Permission must declare one of level, permissionLogin, or permissionWithin.'
+rule:
+  any:
+    - kind: marker_annotation
+      pattern: '@Permission'
+    - all:
+        - kind: annotation
+        - regex: '(?s)^@Permission\s*\([^)]*\)$'
+        - not:
+            regex: '\b(?:level|permissionLogin|permissionWithin)\s*='

@@ -1,0 +1,78 @@
+// HZEROJS Umi submodule config/router.ts template for list + routable HZERO system tab detail page modes.
+//
+// Use when:
+// - routeOpenMode=hzero-openTab-path-params is confirmed by Open Interaction Confirm, and
+// - create / view / edit are opened in a HZERO system tab with routable path params, and
+// - page identity is expressed by path params instead of query/search.
+//
+// Important:
+// - This template does not guarantee one reusable detail tab. Because view/edit paths contain
+//   record id, platforms that key tabs by path can open multiple detail tabs.
+// - If create should be independent and view/edit should reuse one fixed detail tab, use
+//   submodule-router-open-tab-reusable-fixed-path.ts.template instead.
+//
+// Placeholder replacement guide:
+// - __FEATURE_ROUTE_PREFIX__: confirmed full feature route prefix without leading slash. Example: prm/requisitions.
+// - __LIST_TITLE__: Chinese temporary route title for list. Example: 采购申请管理.
+// - __CREATE_TITLE__: Chinese temporary route title for create. Example: 新建采购申请.
+// - __VIEW_TITLE__: Chinese temporary route title for view. Example: 采购申请详情.
+// - __EDIT_TITLE__: Chinese temporary route title for edit. Example: 编辑采购申请.
+// - Runtime openTab.title is separate from these route titles. If a view/edit tab needs a
+//   record-specific label, use a confirmed business display field such as requisitionNumber/name;
+//   do not default to __DETAIL_ID_PARAM__, id, headerId, encrypted id, or database primary key.
+// - __LIST_COMPONENT_PATH__: src/pages Umi pages-root list component path. Examples: Requisitions/List, ./Requisitions/List, @/pages/Requisitions/List.
+// - __DETAIL_COMPONENT_PATH__: src/pages Umi pages-root detail component path. Examples: Requisitions/Detail, ./Requisitions/Detail, @/pages/Requisitions/Detail.
+// - __DETAIL_ID_PARAM__: route param name for record identity. Example: requisitionHeaderId.
+//
+// Rules:
+// - When the feature has a list page, keep list/create/view/edit under one parent routes container.
+// - Parent route is only a grouping/feature boundary and must not have component.
+// - Never use ../src/pages/... from config/router.ts, and never use ./routes/... for src/routes pages.
+// - Do not emit exact by default; add exact only when project evidence requires it and runtime route check verifies child matching.
+// - The list child route must use /list, for example /prm/requisition/list. Do not duplicate the
+//   parent path as the list child path; HZERO route merging can make detail/create/edit children 404.
+// - Detail page mode and record identity must come from path:
+//   /create, /detail/view/:id, /detail/edit/:id.
+// - Do not use ?editFlag=true/false, ?mode=edit/view, ?action=create, query/state or DataSet editFlag
+//   to express page mode, record identity, openTab key/path identity, or save redirect identity.
+// - This template is for ordinary hzero-openTab with routable path params, not per-record dynamic tabs.
+//   Do not set mode: 'dynamic' or dws here. If each record must be an explicit independent HZERO tab,
+//   use submodule-router-dynamic-tab-page-modes.ts.template.
+const routes = [
+  {
+    path: '/__FEATURE_ROUTE_PREFIX__',
+    authorized: true,
+    title: '__LIST_TITLE__',
+    routes: [
+      {
+        path: '/__FEATURE_ROUTE_PREFIX__/list',
+        component: '__LIST_COMPONENT_PATH__',
+        authorized: true,
+        title: '__LIST_TITLE__',
+      },
+      {
+        path: '/__FEATURE_ROUTE_PREFIX__/create',
+        component: '__DETAIL_COMPONENT_PATH__',
+        authorized: true,
+        title: '__CREATE_TITLE__',
+        mode: 'route',
+      },
+      {
+        path: '/__FEATURE_ROUTE_PREFIX__/detail/view/:__DETAIL_ID_PARAM__',
+        component: '__DETAIL_COMPONENT_PATH__',
+        authorized: true,
+        title: '__VIEW_TITLE__',
+        mode: 'route',
+      },
+      {
+        path: '/__FEATURE_ROUTE_PREFIX__/detail/edit/:__DETAIL_ID_PARAM__',
+        component: '__DETAIL_COMPONENT_PATH__',
+        authorized: true,
+        title: '__EDIT_TITLE__',
+        mode: 'route',
+      },
+    ],
+  },
+];
+
+export default routes;

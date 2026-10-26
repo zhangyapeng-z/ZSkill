@@ -1,0 +1,18 @@
+id: java-interface-method-missing-comment
+language: Java
+severity: warning
+message: Interface method should have a nearby comment.
+rule:
+  all:
+    - kind: method_declaration
+    - inside:
+        kind: interface_body
+    - not:
+        follows:
+          stopBy:
+            any:
+              - kind: method_declaration
+              - kind: constant_declaration
+          any:
+            - kind: line_comment
+            - kind: block_comment

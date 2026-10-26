@@ -1,0 +1,58 @@
+// HZEROJS Umi submodule config/router.ts template for list + create + fixed-path reusable detail/edit tab.
+//
+// Use when:
+// - routeOpenMode=hzero-openTab-reusable-fixed-path is confirmed by Open Interaction Confirm, and
+// - create should open its own stable HZERO system tab, and
+// - view/edit of existing records should reuse one HZERO system tab, and
+// - runtime evidence shows different detail paths create multiple tabs or the project chooses fixed-path reuse.
+//
+// Placeholder replacement guide:
+// - __FEATURE_ROUTE_PREFIX__: confirmed full feature route prefix without leading slash. Example: prm/requisitions.
+// - __LIST_TITLE__: Chinese temporary route title for list. Example: 采购申请管理.
+// - __CREATE_TITLE__: Chinese temporary route title for create. Example: 采购申请新建.
+// - __DETAIL_TITLE__: Chinese temporary route title for reusable detail/edit tab. Example: 采购申请详情.
+// - __LIST_COMPONENT_PATH__: src/pages Umi pages-root list component path. Examples: PrmRequisition/List, ./PrmRequisition/List, @/pages/PrmRequisition/List.
+// - __DETAIL_COMPONENT_PATH__: src/pages Umi pages-root detail component path. Examples: PrmRequisition/Detail, ./PrmRequisition/Detail, @/pages/PrmRequisition/Detail.
+//
+// Rules:
+// - Parent route is only a grouping/feature boundary and must not have component.
+// - Generated submodule route config must not use route redirect entries.
+// - Do not emit exact by default; add exact only when project evidence requires it and runtime route check verifies child matching.
+// - The list child route must use /list or the project-confirmed equivalent. Do not duplicate the parent path.
+// - Create uses a fixed create path so a draft is isolated from existing-record detail/edit reuse.
+// - View/edit share one fixed detail path. The target record id and pageMode must come from a confirmed tab context
+//   source such as project navigation state, tab state, sessionStorage fallback, or an equivalent wrapper.
+// - Do not put record id in the reusable detail path. If the detail path is /detail/view/:id or /detail/edit/:id,
+//   platforms that key tabs by path can open multiple detail tabs.
+// - Do not set mode: 'dynamic' or dws here. Per-record independent tabs belong to dynamic-tab templates.
+const routes = [
+  {
+    path: '/__FEATURE_ROUTE_PREFIX__',
+    authorized: true,
+    title: '__LIST_TITLE__',
+    routes: [
+      {
+        path: '/__FEATURE_ROUTE_PREFIX__/list',
+        component: '__LIST_COMPONENT_PATH__',
+        authorized: true,
+        title: '__LIST_TITLE__',
+      },
+      {
+        path: '/__FEATURE_ROUTE_PREFIX__/create',
+        component: '__DETAIL_COMPONENT_PATH__',
+        authorized: true,
+        title: '__CREATE_TITLE__',
+        mode: 'route',
+      },
+      {
+        path: '/__FEATURE_ROUTE_PREFIX__/detail',
+        component: '__DETAIL_COMPONENT_PATH__',
+        authorized: true,
+        title: '__DETAIL_TITLE__',
+        mode: 'route',
+      },
+    ],
+  },
+];
+
+export default routes;

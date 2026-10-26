@@ -1,0 +1,15 @@
+id: java-controller-serviceimpl-inner-class
+language: Java
+severity: error
+message: Controller and ServiceImpl should not contain inner classes.
+rule:
+  all:
+    - kind: class_declaration
+    - has:
+        field: name
+        kind: identifier
+        regex: '.*(Controller|ServiceImpl)$'
+    - has:
+        field: body
+        stopBy: end
+        kind: class_declaration

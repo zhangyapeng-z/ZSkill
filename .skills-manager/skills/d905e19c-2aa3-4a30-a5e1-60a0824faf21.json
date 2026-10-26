@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "skill_id": "d905e19c-2aa3-4a30-a5e1-60a0824faf21",
+  "path": "db-toolkit",
+  "path_key": "db-toolkit",
+  "enabled": true,
+  "tags": [],
+  "source": {
+    "type": "local",
+    "ref": null,
+    "subpath": null,
+    "branch": null
+  }
+}

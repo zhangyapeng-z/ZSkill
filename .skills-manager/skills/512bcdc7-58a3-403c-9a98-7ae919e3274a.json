@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "skill_id": "512bcdc7-58a3-403c-9a98-7ae919e3274a",
+  "path": "pc-adversarial-review",
+  "path_key": "pc-adversarial-review",
+  "enabled": true,
+  "tags": [],
+  "source": {
+    "type": "local",
+    "ref": null,
+    "subpath": null,
+    "branch": null
+  }
+}

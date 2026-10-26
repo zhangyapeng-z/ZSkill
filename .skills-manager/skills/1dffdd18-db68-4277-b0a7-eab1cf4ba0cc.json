@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "skill_id": "1dffdd18-db68-4277-b0a7-eab1cf4ba0cc",
+  "path": "front-hzero-route",
+  "path_key": "front-hzero-route",
+  "enabled": true,
+  "tags": [],
+  "source": {
+    "type": "local",
+    "ref": null,
+    "subpath": null,
+    "branch": null
+  }
+}

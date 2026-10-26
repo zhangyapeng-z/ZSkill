@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "skill_id": "3638643f-3582-47ad-8660-2a69eadba735",
+  "path": "requirements-to-prd",
+  "path_key": "requirements-to-prd",
+  "enabled": true,
+  "tags": [],
+  "source": {
+    "type": "local",
+    "ref": null,
+    "subpath": null,
+    "branch": null
+  }
+}

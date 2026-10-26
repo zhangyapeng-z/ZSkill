@@ -1,0 +1,1635 @@
+---
+id: rd-code-generation
+name: 代码生成
+description: 基于开发计划生成 HZERO 后端代码（对齐工作区 demo 工程：hzero-parent 1.11.5.RELEASE 单模块 + DDD 五层 + Oracle + Liquibase groovy，含单元测试骨架）和前端代码（对齐工作区 crm-demo 工程：UMI3 HZERO 微前端 + choerodon-ui 1.6.8 + TypeScript 语法 + HZERO 平台通用组件/Utils/customize 资产，文档见 kb/08-工具使用/前端资产），输出源代码及代码清单
+version: 2.9.0
+stage: 4
+trigger_patterns:
+  - 代码生成
+  - 生成代码
+  - code generation
+  - 后端代码
+  - 前端代码
+  - 写代码
+  - ts
+  - typescript
+output_artifact: code-manifest.json
+---
+
+# Skill: 代码生成 (Code Generation)
+
+## 0. 组件复用检查（v2.9.0 新增，hzero-copilot 借鉴，编码前强制执行）
+
+开始任何代码生成前，必须**逐项**判断 dev-plan 中每个任务是否可复用 HZERO 平台能力，禁止重复造轮子：
+
+| 需求场景 | 优先复用 | 判断要点 |
+|---|---|---|
+| 数据导入 | HZERO 导入组件（ImportData） | 导入模板定义走元数据，不手写解析 |
+| 数据导出 | HZERO 导出组件（ExportData） | 列定义与导出模板对齐 |
+| 分布式锁 | Redis 分布式锁组件 | 锁粒度/超时/释放明确 |
+| 分页查询 | `PageHelper.doPageAndSort` | 禁手写 LIMIT/OFFSET |
+| 消息发送 | `sendMessage` 消息服务 | 模板编码走消息模板配置 |
+| 值集 | Lov/值集查询 | 禁自建字典表翻译已有值集 |
+| 定时调度 | Scheduler 任务 | Job handler 注册规范 |
+| 工作流 | Workflow 集成 | 审批流配置化优先 |
+| 编码规则 | 编码规则服务 | 禁自写号段生成逻辑 |
+| 验证码 | Captcha 组件 | — |
+| 文件操作 | FileClient | 禁直写 OSS/本地路径 |
+| 多语言 | messages 资源文件 | 禁硬编码中文文案 |
+| 附件 | 平台附件能力 | 上传校验类型/大小 |
+| 传输/存储加密 | 平台加密组件 | 禁自实现加密算法 |
+| WebSocket / 事件总线 | 平台 event-bus / websocket 组件 | — |
+
+**执行规则**：
+1. 逐任务检查结果写入 `code-manifest.json` 顶层新增的 `reuseDecisions` 字段：`[{"task": "T-NN", "capability": "分页查询", "decision": "REUSE", "source": "PageHelper.doPageAndSort", "evidence": "参考工程/文件"}]`
+2. `decision` 取值：`REUSE`（复用平台能力）/ `CUSTOM`（自研）
+3. **每个 `CUSTOM` 必须在 `code-manifest.json` 中注明自研原因**（平台能力无法覆盖的具体点），代码审查（rd-code-review）会对无原因的 CUSTOM 项按规范违规处理
+4. dev-plan 未覆盖但编码过程中新发现的场景，同样按本节判断后补录 reuseDecisions
+
+## 1. 职责范围
+
+### 核心任务
+基于开发计划（`dev-plan.json`）和原型设计（`prototype-spec.json`），生成完整的后端（Java/HZERO）和前端（UMI3 + React + TypeScript + choerodon-ui 1.6.8）源代码，同时输出代码清单（`code-manifest.json`），作为代码审查和测试的输入。
+
+> **后端技术基线（v2.1.0，对齐工作区 `demo/` 工程）**：后端一律按 HZERO 官方 demo 工程的实际工程形态与代码风格生成：
+> - **工程形态**：Maven **单模块**工程，`parent = org.hzero:hzero-parent:1.11.5.RELEASE`，`artifactId = {serviceCode}`
+> - **包结构**：DDD 五层分包，包根以 `requirement-spec.json.project.packageName` 为准（demo 示例 `com.hand.demo`）
+> - **数据库**：**Oracle**（`ojdbc7` + `hikari` + schema），建表脚本使用 **Liquibase groovy**（`src/main/resources/script/db/*.groovy`），不用裸 SQL/MySQL DDL
+> - **代码风格**：实体用 **Lombok `@Getter/@Setter`**；Controller 继承 `BaseController` + `@Permission` + `Results.success` + `SecurityTokenHelper`；Service 批量 `saveData(List<T>)`；分页走 `PageHelper.doPageAndSort`
+> - 技能中所有后端模板均与 demo 工程源码逐行对照校验，禁止臆造 API
+
+> **前端技术基线（v2.5.1，对齐 crm-demo 工程骨架 + HZERO 官方文档规范）**：前端代码框架/组织方式参考 HZERO 官方 CRM demo（UMI3 微前端 + HZERO 前端脚手架），代码语言一律使用 **TypeScript 语法**（`.tsx`/`.ts`）。**页面组织、多语言、操作栏、路由、ds 存放位置、工程形态与包管理遵循官方文档**（《编写页面》《配置路由》《新服务开发》），文档与 crm-demo 冲突时**以文档为准**（冲突点见 4.2.14）：
+> - **工程形态**：HZERO 前端**父工程 + 子模块** monorepo（子模块位于 `packages/hzero-front-{service}`），本技能生成**子模块**形态；包管理优先 **pnpm**（registry 用 HZero npm group）；入口配置 `config/config.ts` 用 `@hzerojs/plugin-micro` 的 `extendParentConfig`；依赖经 `peerDependencies` 由宿主 `hzero-front` 提供
+> - **目录组织**：`src/pages/[功能模块]/具体页面`，**功能模块与页面目录均 PascalCase**（如 `src/pages/Worktime/MyWorktime`）；页面组件文件（`Drawer.tsx`/`FilterForm.tsx`/`XxxModal.tsx`）**与 index.tsx 同目录**；DataSet 工厂函数放 `[功能模块]/stores/` 目录
+> - **关键约定**：页面入口用 `formatterCollections({ code })` 包裹导出（多语言 code 注册）；操作栏用 `c7nOperatorRender`（choerodon-ui）；路由 `registerRegex` 必须收敛为模块路由前缀；`utils/*` 别名（`utils/intl`、`utils/config`、`utils/utils`、`utils/request`）来自 HZERO 宿主；`intl.get('key').d('默认文案')` 国际化贯穿；`Table.Column` JSX 声明式列；`Modal.open({ drawer: true })` 抽屉弹窗；`API_HOST` + `getCurrentTenantId()` 拼 URL
+> - **《编写页面》补充规范（v2.5.1 新增）**：①入口组件名与所在文件夹同名（`Worktime/MyWorktime/index.tsx` 内组件名 `MyWorktime`，不再加 `Page` 后缀）；②import 分块顺序 = 第三方包 -> 本地绝对路径（`utils/*`、`components/*` 别名）-> 本地相对路径（`./Drawer`、`../stores/XxxDs`），分块之间空一行；③无实际意义的包裹标签用 `React.Fragment`；④页面入口文件头加注释块（组件说明 + `@date/@author/@version/@copyright`）；⑤操作栏完整签名 `c7nOperatorRender(operators, record, { limit: n })`（第三参数可选，`limit` 配置收进下拉菜单的按钮数阈值，默认 3；`operators` 元素含 `key/ele/len/title`，`title` 为悬浮提示文本）
+> - 技能中所有前端模板均与 crm-demo 工程源码及官方文档逐文件对照校验，禁止臆造 API
+
+### 边界定义
+- **负责**：数据库脚本（Liquibase groovy）、后端 Entity/Repository/Mapper/Service/Controller/配置代码、前端工程骨架/页面/组件/DataSet/服务/路由代码（TS）、API文档、代码清单
+- **不负责**：需求分析、UI设计、代码审查、测试执行、部署
+- **上游**：开发计划（③）+ 原型设计（②）
+- **下游**：代码审查（⑤）+ 测试（⑥）
+
+## 2. 输入
+
+### 输入产物
+| 产物 | 路径 | 用途 |
+|------|------|------|
+| 开发计划 | `artifacts/03-planning/dev-plan.json` | 获取数据库设计（tables）、API设计、任务列表 |
+| 原型设计 | `artifacts/02-prototype/prototype-spec.json` | 获取页面、DataSet、组件配置、**TS类型注解（tsImports/tsType/tsImport）** |
+| 需求规格 | `artifacts/01-requirement/requirement-spec.json` | 获取项目信息（`project.serviceCode`/`project.packageName`）、角色权限 |
+
+### L1 入口校验
+- [ ] `dev-plan.json` 存在且格式合法
+- [ ] `prototype-spec.json` 存在且格式合法
+- [ ] 上游 `qualityGateStatus` = "PASSED"
+- [ ] `dev-plan.json.database.tables` 非空
+- [ ] `dev-plan.json.tasks` 非空
+- [ ] `prototype-spec.json.tsImports` 存在（含 core/pro/types 三键）
+- [ ] `requirement-spec.json.project` 含 `serviceCode` 与 `packageName`（用于后端包名/工程名）
+
+## 3. 输出
+
+### 产物文件
+| 产物 | 路径 | 说明 |
+|------|------|------|
+| 代码清单 | `artifacts/04-code/code-manifest.json` | 所有生成文件的清单与索引 |
+| 后端代码 | `artifacts/04-code/backend/` | Java源码（HZERO DDD分层，可 `mvn compile` 的完整单模块工程） |
+| 前端代码 | `artifacts/04-code/frontend/` | **TypeScript 源码（UMI3 HZERO 微前端 + choerodon-ui 1.6.8，`.tsx`/`.ts`）** |
+| 数据库脚本 | `artifacts/04-code/backend/src/main/resources/script/db/` | **Liquibase groovy 建表脚本（每表一份）** |
+
+### 产物结构规范
+
+#### code-manifest.json
+```json
+{
+  "_meta": {
+    "stage": "code-generation",
+    "version": "2.2.0",
+    "createdAt": "ISO 8601时间",
+    "createdBy": "WorkBuddy",
+    "upstreamArtifacts": [
+      "../02-prototype/prototype-spec.json",
+      "../03-planning/dev-plan.json"
+    ],
+    "qualityGateStatus": "PASSED"
+  },
+  "project": {
+    "serviceCode": "服务编码（= Maven artifactId）",
+    "packageName": "Java包名（= 后端包根）",
+    "hzeroVersion": "1.11.5.RELEASE",
+    "databaseType": "oracle",
+    "frontendAppName": "前端应用名",
+    "frontendLanguage": "typescript"
+  },
+  "generatedFiles": [
+    {
+      "path": "相对路径（如backend/src/main/java/com/hand/demo/domain/entity/Task.java）",
+      "type": "BACKEND_ENTITY/BACKEND_REPOSITORY/BACKEND_REPOSITORY_IMPL/BACKEND_MAPPER/BACKEND_MAPPER_XML/BACKEND_SERVICE/BACKEND_SERVICE_IMPL/BACKEND_CONTROLLER/BACKEND_CONFIG/BACKEND_DDL_GROOVY/BACKEND_UNIT_TEST/FRONTEND_PAGE/FRONTEND_COMPONENT/FRONTEND_DATASET/FRONTEND_SERVICE/FRONTEND_MOCK/FRONTEND_STYLE/FRONTEND_ROUTE/FRONTEND_APP_CONFIG/CONFIG/API_DOC",
+      "taskId": "关联任务ID",
+      "description": "文件说明",
+      "compiled": true,
+      "compileOutput": "编译输出摘要（后端 mvn compile / 前端 tsc --noEmit）"
+    }
+  ],
+  "reuseDecisions": [
+    {
+      "task": "T-01",
+      "capability": "分页查询",
+      "decision": "REUSE",
+      "source": "PageHelper.doPageAndSort",
+      "evidence": "demo 工程 XxxController",
+      "customReason": null
+    },
+    {
+      "task": "T-05",
+      "capability": "工时汇总计算",
+      "decision": "CUSTOM",
+      "source": null,
+      "evidence": null,
+      "customReason": "平台无工时快照对比聚合能力，需自研 SQL（复杂SQL白名单第3条）"
+    }
+  ],
+  "buildInfo": {
+    "backendCompile": "SUCCESS/FAILED",
+    "frontendTsc": "SUCCESS/FAILED",
+    "issues": [
+      {
+        "severity": "ERROR/WARNING",
+        "message": "问题描述",
+        "file": "文件路径"
+      }
+    ]
+  }
+}
+```
+
+
+### 阶段报告（人工交付物）
+
+`reports/04-代码生成-阶段报告.md`
+
+按《阶段报告编写规范》（`kb/07-项目管理/03-阶段报告编写规范.md`）输出，固定四段结构：
+
+1. **阶段目标**：本环节在主流程中的定位、上游输入、完成标志
+2. **主要产出**：产物清单表（产物/格式/路径/用途去向）
+3. **关键结论**：核心指标与结论，用表格/流程图呈现，禁止大段纯文字
+   - **（v2.8.0）必含「非功能需求设计」表**（7 维：并发/幂等/重试超时/降级/容量/可观测性/安全，见 4.4.4）
+   - **（v2.8.0）改现有工程时必含「风格基线」块**（见 4.4.2）
+4. **风险与建议**：风险/遗留项 + 等级(高/中/低) + 建议动作
+
+> 结构化数据（问题清单、测试结果等）另出 Excel 数据表，报告内以汇总表格引用。
+
+## 4. 关键约束
+
+### 4.1 后端代码生成规范（HZERO，对齐 demo 工程）
+
+> 本节所有模板均取自工作区 `demo/` 工程实际源码（`PcmActivityType` 完整 CRUD 系列 + `Example` 脚手架系列 + `config`/`infra` 辅助类），生成时以 `{packageName}`（如 `com.hand.demo`）、`{serviceCode}`（如 `demo`）、`{Xxx}`（实体名）替换。
+
+#### 4.1.1 技术基线
+- 构建：Maven **单模块**；`<parent>org.hzero:hzero-parent:1.11.5.RELEASE</parent>`；`<artifactId>{serviceCode}</artifactId>`
+- 核心依赖：`hzero-starter-core`、`hzero-starter-mybatis-mapper`、`spring-boot-starter-undertow`、`spring-boot-starter-aop`、`spring-boot-starter-data-redis`、`spring-cloud-starter-netflix-eureka-client`、`hzero-starter-config-client`、`lombok`(provided)、数据库驱动（Oracle `ojdbc7`）
+- 数据库：Oracle（`oracle.jdbc.driver.OracleDriver`，schema 通过 `spring.datasource.hikari.schema` 指定）；HZERO 框架同时兼容 MySQL/PostgreSQL，groovy 脚本用 `helper.isOracle()` 分支保证跨库
+- 表名/列名：**大写下划线**（如 `PCM_ACTIVITY_TYPE`），实体字段 camelCase，`mapUnderscoreToCamelCase: true` 自动映射
+- Maven 仓库：`https://nexus.saas.hand-china.com/repository/hzero/`（Hzero repository）
+
+#### 4.1.2 目录结构模板（单模块，与 demo 一致）
+```
+{serviceCode}/
+├── pom.xml
+├── src/main/java/{packageName}/
+│   ├── {Xxx}Application.java                  # 启动类（@EnableChoerodonResourceServer @EnableDiscoveryClient @SpringBootApplication）
+│   ├── api/
+│   │   └── controller/v1/
+│   │       └── XxxController.java
+│   ├── app/service/
+│   │   ├── XxxService.java
+│   │   └── impl/XxxServiceImpl.java
+│   ├── config/
+│   │   ├── SwaggerTags.java                   # Swagger Api 描述（构造注入 Docket）
+│   │   └── RouteExtraDataManager.java         # 服务路由配置（@ChoerodonExtraData）
+│   ├── domain/
+│   │   ├── entity/Xxx.java
+│   │   ├── repository/XxxRepository.java
+│   │   ├── service/XxxDomainService.java      # 复杂领域业务（抽象类）+ impl/XxxDomainServiceImpl.java
+│   │   └── vo/XxxVO.java                      # 查询/展示 VO（如需要）
+│   └── infra/
+│       ├── constant/Constants.java
+│       ├── feign/XxxFeign.java                # 跨服务调用（+ fallback/XxxFeignFallBack.java）
+│       ├── mapper/XxxMapper.java
+│       ├── repository/impl/XxxRepositoryImpl.java
+│       └── util/Utils.java
+└── src/main/resources/
+    ├── application.yml                        # 数据源/redis/feign/hystrix/ribbon/mybatis 配置
+    ├── bootstrap.yml                          # 端口/eureka/config-client 配置
+    ├── mapper/XxxMapper.xml                   # MyBatis 映射（Oracle jdbcType）
+    ├── messages/messages_zh_CN.properties     # 多语言（错误码 error.xxx.null 等）
+    ├── messages/messages_en_US.properties
+    └── script/db/xxx.groovy                   # Liquibase 建表脚本（每表一份）
+└── src/test/java/{packageName}/
+    └── app/service/XxxServiceImplTest.java    # 核心 Service 单元测试（质量左移，见 4.1.11）
+```
+
+#### 4.1.3 启动类与配置类规范
+
+```java
+package {packageName};
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
+import io.choerodon.resource.annoation.EnableChoerodonResourceServer;
+
+@EnableChoerodonResourceServer
+@EnableDiscoveryClient
+@SpringBootApplication
+public class {Xxx}Application {
+    public static void main(String[] args) {
+        SpringApplication.run({Xxx}Application.class, args);
+    }
+}
+```
+
+```java
+package {packageName}.config;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Configuration;
+import springfox.documentation.service.Tag;
+import springfox.documentation.spring.web.plugins.Docket;
+
+/**
+ * Swagger Api 描述配置
+ */
+@Configuration
+public class SwaggerTags {
+
+    public static final String XXX = "Xxx";
+
+    @Autowired
+    public SwaggerTags(Docket docket) {
+        docket.tags(new Tag(XXX, "{模块} 案例"));
+    }
+}
+```
+- Controller 用 `@Api(tags = SwaggerTags.XXX)` 关联 Swagger 分组
+- 路由配置 `RouteExtraDataManager`（`@ChoerodonExtraData` + `hzero.service.current.*` 环境变量）按 demo 原样生成，仅替换服务名
+
+#### 4.1.4 实体类（Entity）规范
+
+```java
+package {packageName}.domain.entity;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+import io.choerodon.mybatis.annotation.ModifyAudit;
+import io.choerodon.mybatis.annotation.VersionAudit;
+import io.choerodon.mybatis.domain.AuditDomain;
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+import lombok.Getter;
+import lombok.Setter;
+
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.Table;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
+
+/**
+ * {实体说明}({Xxx})实体类
+ *
+ * @author {作者}
+ * @since {yyyy-MM-dd}
+ */
+@Getter
+@Setter
+@ApiModel("{实体说明}")
+@VersionAudit
+@ModifyAudit
+@JsonInclude(value = JsonInclude.Include.NON_NULL)
+@Table(name = "{XXX_TABLE}")
+public class Xxx extends AuditDomain {
+    private static final long serialVersionUID = 1L;
+
+    public static final String FIELD_ID = "id";
+    public static final String FIELD_CODE = "code";
+    // ... 每个字段一个 FIELD_XXX 常量（排序/校验引用）
+
+    @ApiModelProperty("主键")
+    @Id
+    @GeneratedValue
+    private Long id;
+
+    @ApiModelProperty(value = "编码", required = true)
+    @NotBlank
+    private String code;
+
+    // ... 业务字段（@NotBlank/@NotNull 校验注解 + @ApiModelProperty）
+
+    @ApiModelProperty(value = "租户ID", required = true)
+    @NotNull
+    private Long tenantId;
+
+    @ApiModelProperty(value = "删除标识", required = true)
+    @NotNull
+    private Long deleteFlag;
+
+    private String attribute1;
+    private String attribute2;
+    private String attribute3;
+    private String attribute4;
+    private String attribute5;
+}
+```
+硬性约定（与 demo `PcmActivityType` 一致）：
+- **Lombok** `@Getter/@Setter`，不手写 Getter/Setter（示例 `Example.java` 为脚手架旧版，新业务代码一律 Lombok）
+- 继承 `AuditDomain`（自带 `objectVersionNumber/createdBy/creationDate/lastUpdatedBy/lastUpdateDate` 审计字段，mapper 需同步查询）
+- 注解四件套：`@ApiModel` + `@VersionAudit` + `@ModifyAudit` + `@JsonInclude(NON_NULL)`
+- 必填字段用 `@NotBlank`（字符串）/`@NotNull`（数值）；主键 `@Id @GeneratedValue`
+- 多租户字段 `tenantId`、逻辑删除 `deleteFlag`、扩展字段 `attribute1~5` 在业务表需要时保留
+- `@Table` 表名用**大写下划线**
+
+#### 4.1.5 资源库（Repository）规范
+
+```java
+package {packageName}.domain.repository;
+
+import {packageName}.domain.entity.Xxx;
+import org.hzero.mybatis.base.BaseRepository;
+
+import java.util.List;
+
+/**
+ * {实体说明}({Xxx})资源库
+ */
+public interface XxxRepository extends BaseRepository<Xxx> {
+
+    /**
+     * 基础查询
+     *
+     * @param xxx 查询条件
+     * @return 数据列表
+     */
+    List<Xxx> selectList(Xxx xxx);
+
+    /**
+     * 根据主键查询（可关联表）
+     *
+     * @param id 主键
+     * @return 数据
+     */
+    Xxx selectByPrimary(Long id);
+}
+```
+
+```java
+package {packageName}.infra.repository.impl;
+
+import org.apache.commons.collections.CollectionUtils;
+import org.hzero.mybatis.base.impl.BaseRepositoryImpl;
+import org.springframework.stereotype.Component;
+import {packageName}.domain.entity.Xxx;
+import {packageName}.domain.repository.XxxRepository;
+import {packageName}.infra.mapper.XxxMapper;
+
+import javax.annotation.Resource;
+import java.util.List;
+
+/**
+ * {实体说明}({Xxx})资源库
+ */
+@Component
+public class XxxRepositoryImpl extends BaseRepositoryImpl<Xxx> implements XxxRepository {
+    @Resource
+    private XxxMapper xxxMapper;
+
+    @Override
+    public List<Xxx> selectList(Xxx xxx) {
+        return xxxMapper.selectList(xxx);
+    }
+
+    @Override
+    public Xxx selectByPrimary(Long id) {
+        Xxx xxx = new Xxx();
+        xxx.setId(id);
+        List<Xxx> list = xxxMapper.selectList(xxx);
+        if (CollectionUtils.isEmpty(list)) {
+            return null;
+        }
+        return list.get(0);
+    }
+}
+```
+- 接口继承 `org.hzero.mybatis.base.BaseRepository<T>`（自带 `insertSelective/updateByPrimaryKeySelective/batchInsertSelective/batchUpdateByPrimaryKeySelective/batchDeleteByPrimaryKey/selectByPrimaryKey` 等）
+- 实现继承 `BaseRepositoryImpl<T>`，注解 **`@Component`**，注入 Mapper 用 **`@Resource`**
+- 自定义查询只声明 `selectList`（条件实体）+ `selectByPrimary`（走 mapper 的 selectList 取首条），与 demo 完全一致
+
+#### 4.1.6 Mapper 规范（接口 + XML）
+
+```java
+package {packageName}.infra.mapper;
+
+import io.choerodon.mybatis.common.BaseMapper;
+import {packageName}.domain.entity.Xxx;
+
+import java.util.List;
+
+/**
+ * {实体说明}({Xxx})Mapper
+ */
+public interface XxxMapper extends BaseMapper<Xxx> {
+    /**
+     * 基础查询
+     *
+     * @param xxx 查询条件
+     * @return 数据列表
+     */
+    List<Xxx> selectList(Xxx xxx);
+}
+```
+
+`src/main/resources/mapper/XxxMapper.xml`（Oracle 风格）：
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="{packageName}.infra.mapper.XxxMapper">
+
+    <sql id="BaseSql">
+        T.ID,
+        T.CODE,
+        T.TENANT_ID,
+        T.DELETE_FLAG,
+        T.ATTRIBUTE1,
+        T.ATTRIBUTE2,
+        T.ATTRIBUTE3,
+        T.ATTRIBUTE4,
+        T.ATTRIBUTE5,
+        T.creation_date,
+        T.created_by,
+        T.last_updated_by,
+        T.last_update_date,
+        T.object_version_number
+    </sql>
+
+    <select id="selectList" resultType="{packageName}.domain.entity.Xxx">
+        select
+        <include refid="BaseSql"/>
+        from XXX_TABLE T
+        <where>
+            <if test="id != null">
+                and T.ID = #{id,jdbcType = INTEGER}
+            </if>
+            <if test="code != null">
+                and T.CODE = #{code,jdbcType = VARCHAR}
+            </if>
+            <if test="tenantId != null">
+                and T.TENANT_ID = #{tenantId,jdbcType = INTEGER}
+            </if>
+            <if test="deleteFlag != null">
+                and T.DELETE_FLAG = #{deleteFlag,jdbcType = INTEGER}
+            </if>
+            <!-- ... 每个查询条件一个 <if> -->
+        </where>
+    </select>
+</mapper>
+```
+硬性约定（与 demo `PcmActivityTypeMapper.xml` 一致）：
+- `namespace` = Mapper 全限定名；`selectList` 的 `resultType` = 实体全限定名
+- **BaseSql 片段**：业务列（大写）+ 审计列（`creation_date/created_by/last_updated_by/last_update_date/object_version_number`，小写）
+- 动态 `where` + `<if test="字段 != null">`；**Oracle jdbcType**：数值 `INTEGER`、字符串 `VARCHAR`（`#{xxx,jdbcType = INTEGER}` 格式，等号两侧空格）
+- 表名大写下划线并加别名（`PCM_ACTIVITY_TYPE PAT`）；连表查询在 selectList 中以 LEFT JOIN 扩展
+
+#### 4.1.7 应用服务（Service）规范
+
+```java
+package {packageName}.app.service;
+
+import io.choerodon.core.domain.Page;
+import io.choerodon.mybatis.pagehelper.domain.PageRequest;
+import {packageName}.domain.entity.Xxx;
+
+import java.util.List;
+
+/**
+ * {实体说明}({Xxx})应用服务
+ */
+public interface XxxService {
+
+    /**
+     * 查询数据
+     *
+     * @param pageRequest 分页参数
+     * @param xxx         查询条件
+     * @return 分页结果
+     */
+    Page<Xxx> selectList(PageRequest pageRequest, Xxx xxx);
+
+    /**
+     * 保存数据（新增或更新）
+     *
+     * @param xxxs 数据列表
+     */
+    void saveData(List<Xxx> xxxs);
+}
+```
+
+```java
+package {packageName}.app.service.impl;
+
+import io.choerodon.core.domain.Page;
+import io.choerodon.mybatis.pagehelper.PageHelper;
+import io.choerodon.mybatis.pagehelper.domain.PageRequest;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import {packageName}.app.service.XxxService;
+import {packageName}.domain.entity.Xxx;
+import {packageName}.domain.repository.XxxRepository;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+/**
+ * {实体说明}({Xxx})应用服务
+ */
+@Service
+public class XxxServiceImpl implements XxxService {
+    @Autowired
+    private XxxRepository xxxRepository;
+
+    @Override
+    public Page<Xxx> selectList(PageRequest pageRequest, Xxx xxx) {
+        return PageHelper.doPageAndSort(pageRequest, () -> xxxRepository.selectList(xxx));
+    }
+
+    @Override
+    public void saveData(List<Xxx> xxxs) {
+        List<Xxx> insertList = xxxs.stream().filter(line -> line.getId() == null).collect(Collectors.toList());
+        List<Xxx> updateList = xxxs.stream().filter(line -> line.getId() != null).collect(Collectors.toList());
+        xxxRepository.batchInsertSelective(insertList);
+        xxxRepository.batchUpdateByPrimaryKeySelective(updateList);
+    }
+}
+```
+硬性约定（与 demo `PcmActivityTypeServiceImpl` 一致）：
+- 分页：`PageHelper.doPageAndSort(pageRequest, () -> repository.selectList(xxx))`，**分页逻辑在 Service 层**，Repository/Mapper 只返回 `List`
+- 保存：**批量 `saveData(List<T>)`**，按主键 `null/非null` 用 stream 分流 → `batchInsertSelective` + `batchUpdateByPrimaryKeySelective`（不写 `createXxx/updateXxx` 单条接口，除非 dev-plan 明确要求）
+- 复杂业务（跨实体事务、状态机、审批流）在 `domain/service/XxxDomainService`（抽象类）中实现，`app/service` 只做编排
+
+#### 4.1.8 控制器（Controller）规范
+
+```java
+package {packageName}.api.controller.v1;
+
+import io.choerodon.core.domain.Page;
+import io.choerodon.core.iam.ResourceLevel;
+import io.choerodon.mybatis.pagehelper.annotation.SortDefault;
+import io.choerodon.mybatis.pagehelper.domain.PageRequest;
+import io.choerodon.mybatis.pagehelper.domain.Sort;
+import io.choerodon.swagger.annotation.Permission;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import org.hzero.core.base.BaseController;
+import org.hzero.core.util.Results;
+import org.hzero.mybatis.helper.SecurityTokenHelper;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import {packageName}.app.service.XxxService;
+import {packageName}.config.SwaggerTags;
+import {packageName}.domain.entity.Xxx;
+import {packageName}.domain.repository.XxxRepository;
+import springfox.documentation.annotations.ApiIgnore;
+
+import java.util.List;
+
+/**
+ * {实体说明}({Xxx})表控制层
+ *
+ * @author {作者}
+ * @since {yyyy-MM-dd}
+ */
+@Api(tags = SwaggerTags.XXX)
+@RestController("xxxController.v1")
+@RequestMapping("/v1/{organizationId}/xxx")
+public class XxxController extends BaseController {
+
+    @Autowired
+    private XxxRepository xxxRepository;
+
+    @Autowired
+    private XxxService xxxService;
+
+    @ApiOperation(value = "{实体}列表")
+    @Permission(level = ResourceLevel.ORGANIZATION)
+    @GetMapping
+    public ResponseEntity<Page<Xxx>> list(Xxx xxx, @PathVariable Long organizationId,
+                                          @ApiIgnore @SortDefault(value = Xxx.FIELD_ID,
+                                                  direction = Sort.Direction.DESC) PageRequest pageRequest) {
+        Page<Xxx> list = xxxService.selectList(pageRequest, xxx);
+        return Results.success(list);
+    }
+
+    @ApiOperation(value = "{实体}明细")
+    @Permission(level = ResourceLevel.ORGANIZATION)
+    @GetMapping("/{id}/detail")
+    public ResponseEntity<Xxx> detail(@PathVariable Long id) {
+        Xxx xxx = xxxRepository.selectByPrimary(id);
+        return Results.success(xxx);
+    }
+
+    @ApiOperation(value = "创建或更新{实体}")
+    @Permission(level = ResourceLevel.ORGANIZATION)
+    @PostMapping
+    public ResponseEntity<List<Xxx>> save(@PathVariable Long organizationId, @RequestBody List<Xxx> xxxs) {
+        validObject(xxxs);
+        SecurityTokenHelper.validTokenIgnoreInsert(xxxs);
+        xxxs.forEach(item -> item.setTenantId(organizationId));
+        xxxService.saveData(xxxs);
+        return Results.success(xxxs);
+    }
+
+    @ApiOperation(value = "删除{实体}")
+    @Permission(level = ResourceLevel.ORGANIZATION)
+    @DeleteMapping
+    public ResponseEntity<?> remove(@RequestBody List<Xxx> xxxs) {
+        SecurityTokenHelper.validToken(xxxs);
+        xxxRepository.batchDeleteByPrimaryKey(xxxs);
+        return Results.success();
+    }
+}
+```
+硬性约定（与 demo `PcmActivityTypeController` 一致）：
+- `@RestController("xxxController.v1")`（**bean 名带 `.v1` 后缀**）+ `@RequestMapping("/v1/{organizationId}/xxx")`（**路径含 organizationId**）
+- 标准四接口：`GET 列表`（`Page<T>` + `@SortDefault` + `@ApiIgnore PageRequest`）、`GET /{id}/detail` 明细、`POST 批量保存`、`DELETE 批量删除`
+- 保存：`validObject(xxxs)` 校验 → `SecurityTokenHelper.validTokenIgnoreInsert(xxxs)` → **`setTenantId(organizationId)` 注入租户** → `service.saveData`
+- 删除：`SecurityTokenHelper.validToken(xxxs)`（校验 security token 防越权）→ `batchDeleteByPrimaryKey`
+- 权限：`@Permission(level = ResourceLevel.ORGANIZATION)`（租户级接口）；平台级接口用 `ResourceLevel.SITE`
+- 返回统一 `Results.success(...)`；Controller 只做参数校验/安全/编排，业务在 Service
+
+#### 4.1.9 数据库脚本规范（Liquibase groovy，Oracle 兼容）
+
+> demo 工程使用 `src/main/resources/script/db/*.groovy`（Liquibase 变更集）管理表结构，**禁止生成 MySQL 专属 DDL**（`AUTO_INCREMENT`/`ENGINE=InnoDB` 等）。
+
+```groovy
+package script.db
+
+databaseChangeLog(logicalFilePath: 'script/db/xxx.groovy') {
+    changeSet(author: "{作者}", id: "{yyyy-MM-dd}-xxx") {
+        def weight = 1
+        if (helper.isSqlServer()) {
+            weight = 2
+        } else if (helper.isOracle()) {
+            weight = 3
+        }
+        if (helper.dbType().isSupportSequence()) {
+            createSequence(sequenceName: 'xxx_s', startValue: "1")
+        }
+        createTable(tableName: "XXX_TABLE", remarks: "{表说明}") {
+            column(name: "id", type: "bigint", autoIncrement: true, remarks: "主键") { constraints(primaryKey: true) }
+            column(name: "code", type: "varchar(" + 64 * weight + ")", remarks: "编码") { constraints(nullable: "false") }
+            // ... 业务列
+            column(name: "tenant_id", type: "bigint", remarks: "租户ID") { constraints(nullable: "false") }
+            column(name: "delete_flag", type: "bigint", defaultValue: "0", remarks: "删除标识")
+            column(name: "attribute1", type: "varchar(" + 64 * weight + ")", remarks: "扩展字段1")
+            // ... attribute2~5
+            column(name: "object_version_number", type: "bigint", defaultValue: "1", remarks: "")
+            column(name: "created_by", type: "bigint", defaultValue: "0", remarks: "")
+            column(name: "creation_date", type: "datetime", defaultValueComputed: "CURRENT_TIMESTAMP", remarks: "")
+            column(name: "last_updated_by", type: "bigint", defaultValue: "0", remarks: "")
+            column(name: "last_update_date", type: "datetime", defaultValueComputed: "CURRENT_TIMESTAMP", remarks: "")
+        }
+        addUniqueConstraint(columnNames: "code", tableName: "XXX_TABLE", constraintName: "xxx_u1")
+    }
+}
+```
+硬性约定（与 demo `example.groovy` 一致）：
+- 头部固定：`package script.db` + `databaseChangeLog(logicalFilePath: 'script/db/xxx.groovy')`
+- `weight` 分支（SqlServer=2 / Oracle=3）用于 varchar 长度跨库换算；Oracle 序列：`helper.dbType().isSupportSequence()` → `createSequence`
+- 审计五列**必须**：`object_version_number/created_by/creation_date/last_updated_by/last_update_date`
+- 唯一约束/索引：`addUniqueConstraint`/`createIndex`（约束名 `{table}_u{n}`）
+- 文件名小写（`xxx.groovy`），`changeSet.id` 用日期前缀（`2026-08-14-xxx`）
+- 每个 `dev-plan.json.database.tables` 中的表生成一份独立 groovy
+
+#### 4.1.10 配置文件规范
+
+`application.yml`（关键段，其余按 demo 原样）：
+```yaml
+spring:
+  application:
+    name: {serviceCode}
+  datasource:
+    driver-class-name: oracle.jdbc.driver.OracleDriver
+    url: ${SPRING_DATASOURCE_URL:jdbc:oracle:thin:@host:1521/{sid}}
+    username: ${SPRING_DATASOURCE_USERNAME:hzero}
+    password: ${SPRING_DATASOURCE_PASSWORD:xxx}
+    hikari:
+      minimum-idle: ${SPRING_DATASOURCE_MINIMUM_IDLE:20}
+      maximum-pool-size: ${SPRING_DATASOURCE_MAXIMUM_POOL_SIZE:200}
+      connection-timeout: ${SPRING_DATASOURCE_CONNECTION_TIMEOUT:30000}
+      schema: {SCHEMA}                       # Oracle schema
+  data:
+    redis:
+      host: ${SPRING_REDIS_HOST:127.0.0.1}
+      port: ${SPRING_REDIS_PORT:6379}
+      database: ${SPRING_REDIS_DATABASE:1}
+mybatis:
+  mapperLocations: classpath*:/mapper/*.xml
+  configuration:
+    mapUnderscoreToCamelCase: true
+# feign.hystrix / hystrix / ribbon 配置段按 demo 工程原样保留
+```
+`bootstrap.yml`：`server.port: 8080`、`management.server.port: 8081`、eureka `defaultZone`、config-client `enabled: false`（默认），按 demo 原样。
+`messages/messages_zh_CN.properties`（与 `messages_en_US.properties`）：错误码文案，如
+```properties
+error.code.null=编码不能为空
+error.code.illegal=编码不合法
+error.name.null=名称不能为空
+```
+实体校验注解中的 `message = "error.xxx.null"` 引用这些 key（HZERO 约定 `error.{field}.{rule}`）。
+
+#### 4.1.11 单元测试骨架约定（质量左移，v2.3.0 新增）
+> 目标：核心逻辑在开发阶段即可验证，测试左移到提交级；配合 ⑤ 可测试性审查与 ⑥ 提交级冒烟。
+
+- **必须生成**：每个核心 Service（`XxxServiceImpl`）生成对应 `src/test/java/{packageName}/app/service/XxxServiceImplTest.java`（code-manifest `type = BACKEND_UNIT_TEST`）
+- **测试框架**：JUnit 4 + Mockito（HZERO 工程标准）；pom 增加 `spring-boot-starter-test`（scope test）
+- **覆盖范围**：核心 Service 的业务规则分支（如工时 0.1-8h、当天合计≤8h、唯一性约束、状态流转）
+- **可测试设计**：Service 依赖通过构造注入（demo 风格 `@Resource`/构造器），可 mock Mapper/Repository；避免不可 mock 的静态调用链
+- **断言要求**：每个用例有明确断言（`assertEquals/assertThrows`），禁止空转测试
+- **冒烟入口**：应用保留 `/actuator/health` 健康检查端点，供流水线提交级冒烟与⑦冒烟用例复用
+
+##### 4.1.11.1 TDD 红绿循环纪律（v2.7.0 新增）
+
+> 方法论源自 tdd 技能（mattpocock/skills）：测试骨架不是生成完代码后的"补件"，而是**驱动实现的循环参照**。当对已生成代码做修复/增强/重构时，遵循本节循环。
+
+- **Seam（测试缝）先行**：写任何测试前，先明确测试打在哪个公共边界（seam）上——对 HZERO 工程即 Service 接口（`XxxService`）与 Controller HTTP 端点，**禁止**为了测试去 mock 实体内部字段或测试 private 方法。seam 清单须与用户/上游计划确认后再落测试。
+- **红在绿前**：每个业务分支先写失败测试，再写刚好让它通过的最小实现；禁止一次性写完所有测试再写全部实现（horizontal slicing——那样验证的是想象中的行为）。
+- **测试验证行为，不验证实现**：好测试读起来像规格（"当天合计工时超 8h 被拒绝"）；若重构后测试挂了但行为没变，说明测试打错了位置。
+- **反模式自查**（生成骨架时即规避）：
+  - *同义反复测试*：断言值用代码同款逻辑算出来（`expect(add(a,b)).toBe(a+b)`）——期望值必须来自独立事实源（已知正确的字面量、规格算例）；
+  - *实现耦合测试*：mock 了协作者内部、测了私有方法、绕过接口直查数据库。
+- **垂直切片节奏**：一个 seam、一个测试、一次最小实现为一个循环，逐个循环推进；重构不属于红绿循环，留给 ⑤ 代码审查阶段。
+
+### 4.2 前端代码生成规范（UMI3 HZERO 微前端 + TypeScript + choerodon-ui 1.6.8）
+
+> **框架参考工作区 `crm-demo/` 工程**（HZERO 官方 CRM demo），**代码语言一律 TypeScript**（`.tsx`/`.ts`）。类型引用以 `prototype-spec.json` 的 `tsImports`/`tsType`/`tsImport` 为权威来源。**页面组织/多语言/操作栏/路由/ds 位置/工程形态遵循 HZERO 官方文档**（《编写页面》《配置路由》《新服务开发》），模板与 crm-demo 及官方文档逐文件对照校验，禁止臆造 API。
+
+#### 4.2.1 技术基线
+- 工程形态：**HZERO 前端父工程 + 子模块 monorepo**（《新服务开发》）。本技能生成**子模块**（`packages/hzero-front-{service}`，平台模块惯例 `hzero-front-hxxx`），父工程由 `npx @hzerojs/create-hzero-app`（`hzero-app`）创建、不在本技能产物内；子模块入口配置 `config/config.ts` 用 `@hzerojs/plugin-micro` 的 `extendParentConfig`；路由用 UMI `routes`（`component: './{Module}/{Page}'` 相对路径）；`hash: true` + `hzeroMicro.microConfig.registerRegex`
+- 包管理与安装源：**优先 pnpm**（性能优于 yarn），yarn 可接受；一律走 HZero npm group 源：`pnpm i --registry http://nexus.saas.hand-china.com/content/groups/hzero-npm-group/`；新模块/新页面脚手架：`npx @hzerojs/create-hzero-app --registry http://nexus.saas.hand-china.com/content/groups/hzero-npm-group/`
+- 启动调试：**单模块启动**（支持热刷新）`cd packages/hzero-front-{service} && pnpm run start`；**全局启动**（不支持热刷新）父工程先 `pnpm build:ms` 勾选模块编译，再 `pnpm run start`；全局启动报 `Can't resolve 'xxx/lib/components/...'` 时在父工程 `pnpm add xxx -w` 补依赖
+- 依赖：`choerodon-ui`（核心）、`choerodon-ui/pro`（Pro）、`@ant-design/icons`（**仅限图标**，如 `PlusOutlined`）、`mobx`/`mobx-react`、`dva`、`react`、`react-dom`、`react-intl-universal`；`@hzero-front-ui/cfg`/`hzero-front`/`hzero-ui` 等由宿主通过 `peerDependencies` 提供
+- **`utils/*` 别名**（HZERO 宿主提供，不在工程内实现）：`utils/intl`（`intl.get(key).d(默认文案)`）、`utils/intl/formatterCollections`（多语言 code 注册）、`utils/config`（`API_HOST`）、`utils/utils`（`getCurrentTenantId()`、`operatorRender`/`c7nOperatorRender`）、`utils/request`（封装的 axios 请求）
+- 环境变量（《新服务开发》）：`config/config.ts` 的 `define['process.env']` 配置模块级变量（`PLATFORM_VERSION`/`CLIENT_ID` 等）；`config.dev.ts` 与 `config.ts` 中配置 `API_HOST`/`WEBSOCKET_HOST` 指向后端地址；代码内用 `process.env.xxx` 获取
+- TypeScript：`tsconfig.json` 开 `strict: true`、`jsx: "react-jsx"`、`esModuleInterop`、`allowSyntheticDefaultImports`、`paths: { "@/*": ["src/*"] }`
+- 组件来源（对齐 1.6.8 真实导出）：`choerodon-ui/pro` 导入 `DataSet, Table, Button, Modal, message, Form, Tooltip, Select, TextField, NumberField, DatePicker, Lov`；`choerodon-ui` 导入 `Tag` 等核心组件；图标一律 `@ant-design/icons`
+- **HZERO 平台通用资产**（v2.6.0 引入，文档见 `kb/08-工具使用/前端资产/`，索引 README 含选型总表）：
+  - **优先级规则**：通用场景一律用 `choerodon-ui/pro` 组件（如值集选择用 pro 的 `Lov`，不用平台 `components/Lov`）；**仅当能力为平台组件独有**时经宿主别名引入（`components/Xxx` 属 import 第二块「本地绝对路径」）
+  - **平台独有组件白名单**（`components/*`，子模块不重复实现）：`Upload`（上传）、`ChunkUpload`（分片上传）、`RichText`（富文本，用新版）、`CodeEditor`（代码编辑）、`Gantt`（甘特图）、`VirtualTable`（虚拟滚动表格）、`Export`/`Import`（Excel 导入导出）、`Permission`（前端权限）、`FieldLanguage`（多语言文案）、`Cron`（定时表达式）、`ValueList`（独立值集）
+  - **通用 Utils**：`services/api` 的 `queryIdpValue`/`queryUnifyIdpValue`（值集查询，DataSet lookupCode 之外的编程式取值场景）；`utils/utils` 全量方法见 `kb/08-工具使用/前端资产/通用Utils/工具方法.md`
+  - **customize 跨模块**：`hzero-front/lib/customize` 的 `mapCustomize`（工作台卡片/工作流审批表单/数据权限维度/菜单布局四场景），注意与 `utils/router` 的循环依赖
+  - 属性/API 以 kb 文档为准，禁止臆造 props
+- **禁止**：`antd` 组件库、1.6.8 不存在的组件（如 `Drawer`）、`console.log` 残留
+
+#### 4.2.2 目录结构模板（对齐官方文档《编写页面》《配置路由》）
+```
+hzero-front-{service}/                              # 子模块（packages/ 下）
+├── package.json                          # peerDependencies 声明（宿主提供核心依赖）
+├── tsconfig.json                         # strict + paths @/*
+├── config/
+│   ├── config.ts                         # extendParentConfig + routes + registerRegex(模块前缀) + define
+│   └── config.dev.ts                     # UMI_ENV=dev 配置（不使用 extendParentConfig；API_HOST/WEBSOCKET_HOST）
+└── src/
+    ├── typings.d.ts                      # *.less/*.css/*.png/*.svg 模块声明
+    ├── routes-config.tsx                 # 动态路由入口（默认 addRoutes 返回 []）
+    ├── services/
+    │   └── index.ts                      # 全模块 API 封装（request + API_HOST + getCurrentTenantId）
+    ├── stores/                           # （可选）模块级 ds 集中存放
+    └── pages/
+        └── {Module}/                     # 功能模块目录 —— PascalCase（如 Worktime）
+            ├── {Page}/                   # 具体页面目录 —— PascalCase（如 MyWorktime）
+            │   ├── index.tsx             # 页面入口（formatterCollections 包裹导出）
+            │   ├── index.less            # 页面样式（CSS Modules：styles.wrapper）
+            │   ├── Drawer.tsx            # 新增/编辑抽屉组件（与 index.tsx 同目录）
+            │   ├── FilterForm.tsx        # 查询表单组件（自定义查询区时使用；Table filterBar 场景可省）
+            │   └── XxxModal.tsx          # 业务弹窗组件（如角色选择 RoleModal，按需）
+            ├── stores/                   # 本模块 DataSet 工厂（[功能模块]/stores）
+            │   └── {Page}Ds.ts           # queryDs/listDs/formDs 工厂函数（返回 DataSetProps）
+            └── mock/                     # 模拟数据（可选，后端未就绪时；含 xxxName 展示字段）
+```
+硬性约定（《编写页面》《配置路由》）：
+- 目录结构 `src/pages/[功能模块]/具体页面`，**功能模块与具体页面（组件）目录均 PascalCase**
+- 页面组件文件（`Drawer.tsx`/`FilterForm.tsx`/`XxxModal.tsx`）**与页面 `index.tsx` 同目录**，不放 `components/` 子目录
+- **ds 文件放 `[功能模块]/stores/`**（如 `src/pages/Worktime/stores/MyWorktimeDs.ts`），也可集中放 `src/stores/`；**不再与页面同目录放 `dsConfig.ts`**（冲突点 C2/C5，见 4.2.14）
+
+#### 4.2.3 标准 import 语句（对齐 crm-demo 实际用法）
+```tsx
+// Pro 组件（注意：Button/message/Tooltip 也从 pro 导入，与 crm-demo 一致）
+import { DataSet, Table, Button, Modal, message, Form, Tooltip } from 'choerodon-ui/pro';
+// 核心组件（Tag 等）
+import { Tag } from 'choerodon-ui';
+// 图标：仅限 @ant-design/icons（禁止 antd 组件）
+import { PlusOutlined } from '@ant-design/icons';
+// HZERO 宿主别名（禁止在本工程内实现，直接使用）
+import intl from 'utils/intl';
+import { API_HOST } from 'utils/config';
+import { getCurrentTenantId } from 'utils/utils';
+import request from 'utils/request';
+// 类型（源自 components-dataset，从 pro 根导出引用）
+import type { DataSetProps, FieldProps, TransportProps } from 'choerodon-ui/pro';
+// 路由
+import { useParams } from 'react-router-dom';
+```
+
+#### 4.2.4 DataSet 工厂函数模板（`src/pages/{Module}/stores/{Page}Ds.ts`）
+> 与 crm-demo `dsConfig.jsx` 一致：**导出 `queryDs`/`listDs`/`formDs` 工厂函数**（返回 `DataSetProps`），页面里 `new DataSet(listDs())`；文件后缀用 `.ts` 并加类型注解。**文件位置遵循《配置路由》：放 `[功能模块]/stores/`（也可集中 `src/stores/`）**，每页面一份 `{Page}Ds.ts`。字段名/类型/required/lookupCode 必须与 `prototype-spec.json` 的 `dataSets[].fields` 完全一致。
+
+```ts
+import intl from 'utils/intl';
+import { API_HOST } from 'utils/config';
+import { getCurrentTenantId } from 'utils/utils';
+import type { DataSetProps, FieldProps } from 'choerodon-ui/pro';
+
+// 查询区 DataSet（queryFields 仅用于 filterBar 查询条件）
+export const queryDs = (): DataSetProps => ({
+  autoQuery: false,
+  fields: [
+    {
+      name: 'customerName',
+      type: 'string',
+      label: intl.get('crm.demo.customer.name').d('客户名称'),
+    },
+  ],
+});
+
+// 列表 DataSet（字段含 sortable/width/minWidth；操作列 action 字段 lock: 'right'）
+export const listDs = (): DataSetProps => ({
+  autoQuery: true,
+  pageSize: 20,
+  selection: false,
+  queryFields: [
+    {
+      name: 'customerName',
+      type: 'string',
+      label: intl.get('crm.demo.customer.name').d('客户名称'),
+    },
+  ],
+  fields: [
+    { name: 'customerCode', type: 'string', label: intl.get('crm.demo.customer.code').d('客户编码'), sortable: true, width: 140 },
+    { name: 'customerName', type: 'string', label: intl.get('crm.demo.customer.name').d('客户名称'), sortable: true, minWidth: 200 },
+    { name: 'statusMeaning', type: 'string', label: intl.get('crm.demo.customer.status').d('状态'), width: 100 },
+    { name: 'creationDate', type: 'string', label: intl.get('crm.demo.customer.createDate').d('创建时间'), sortable: true, width: 180 },
+    { name: 'action', type: 'string', label: intl.get('crm.demo.customer.action').d('操作'), width: 120, lock: 'right' },
+  ],
+  transport: {
+    read: (config) => {
+      const url = `${API_HOST}/crm/v1/${getCurrentTenantId()}/customers`;
+      return { ...config, url, method: 'GET' };
+    },
+  },
+});
+
+// 新建/编辑表单 DataSet（字段 required/defaultValue/lookupCode/lookupData）
+export const formDs = (): DataSetProps => ({
+  fields: [
+    { name: 'customerCode', type: 'string', required: true, label: intl.get('crm.demo.customer.code').d('客户编码') },
+    { name: 'customerName', type: 'string', required: true, label: intl.get('crm.demo.customer.name').d('客户名称') },
+    { name: 'status', type: 'string', required: true, defaultValue: 'ACTIVE', label: intl.get('crm.demo.customer.status').d('客户状态'), lookupCode: 'HPIS.CRM_CUSTOMER_STATUS' },
+    { name: 'industry', type: 'string', label: intl.get('crm.demo.customer.industry').d('所属行业'), lookupCode: 'HPIS.CRM_INDUSTRY' },
+  ],
+  transport: {
+    create: ({ data }) => {
+      const url = `${API_HOST}/crm/v1/${getCurrentTenantId()}/customers`;
+      return { url, method: 'POST', data: data[0] };
+    },
+    update: ({ data }) => {
+      const url = `${API_HOST}/crm/v1/${getCurrentTenantId()}/customers/${data[0].customerId}`;
+      return { url, method: 'PUT', data: data[0] };
+    },
+  },
+});
+```
+硬性约定（与 crm-demo `dsConfig.jsx` 一致）：
+- 工厂函数返回**纯配置对象**（不 `new DataSet`），页面 `useMemo(() => new DataSet(listDs()), [])`
+- `queryDs`（查询区）/`listDs`（列表）/`formDs`（表单）三个工厂，命名固定
+- 字段配置：`name/type/label/required/defaultValue/sortable/width/minWidth/lookupCode/lookupData`
+- **`lookupData`** 可直接提供本地选项（`[{ value, meaning }]`），`lookupCode` 对应后端值集快码
+- `transport`：`read: (config) => ({ ...config, url, method })`（**必须展开 config 保留分页/排序参数**）；`create/update: ({ data }) => ({ url, method, data: data[0] })`（单条提交）
+- URL 统一 `${API_HOST}/{service}/v1/${getCurrentTenantId()}/{resource}`，主键级操作拼接 `/{id}`；**与 dev-plan apiDesign 完全一致**
+
+#### 4.2.5 列表页模板（`src/pages/{Module}/{Page}/index.tsx`，核心）
+
+```tsx
+import React, { useMemo, useCallback } from 'react';
+import { DataSet, Table, Button, Modal, message } from 'choerodon-ui/pro';
+import { PlusOutlined } from '@ant-design/icons';
+
+import intl from 'utils/intl';
+import formatterCollections from 'utils/intl/formatterCollections';
+import { c7nOperatorRender } from 'utils/utils';
+
+import { listDs, formDs } from '../stores/XxxDs';
+import Drawer from './Drawer';
+import StatusTag from './StatusTag';
+import styles from './index.less';
+
+// Xxx - 业务组件 - {页面名}（入口组件名与所在文件夹同名）
+const Xxx: React.FC = () => {
+  const listDataSet = useMemo(() => new DataSet(listDs()), []);
+
+  const handleAdd = useCallback(() => {
+    const formDataSet = new DataSet(formDs());
+    Modal.open({
+      title: intl.get('{service}.{module}.xxx.create').d('新建'),
+      drawer: true,
+      width: 540,
+      children: <Drawer dataSet={formDataSet} />,
+      onOk: async () => {
+        try {
+          const result = await formDataSet.submit();
+          if (result && result.success) {
+            message.success(intl.get('hzero.common.notification.success').d('创建成功'));
+            listDataSet.query();
+            return true;
+          }
+          return false;
+        } catch (e) {
+          return false;
+        }
+      },
+    });
+  }, [listDataSet]);
+
+  const handleEdit = useCallback((record) => {
+    const formDataSet = new DataSet(formDs());
+    formDataSet.loadData([record.toJSON()]);
+    Modal.open({
+      title: intl.get('{service}.{module}.xxx.edit').d('编辑'),
+      drawer: true,
+      width: 540,
+      children: <Drawer dataSet={formDataSet} />,
+      onOk: async () => {
+        const result = await formDataSet.submit();
+        if (result && result.success) {
+          message.success(intl.get('{service}.{module}.common.updateSuccess').d('更新成功'));
+          listDataSet.query();
+          return true;
+        }
+        return false;
+      },
+    });
+  }, [listDataSet]);
+
+  const handleDelete = useCallback((record) => {
+    Modal.confirm({
+      title: intl.get('{service}.{module}.common.confirmDelete').d('确认删除'),
+      content: intl.get('{service}.{module}.common.confirmDeleteContent').d('确定要删除吗？'),
+      onOk: async () => {
+        message.success(intl.get('{service}.{module}.common.deleteSuccess').d('删除成功'));
+        listDataSet.query();
+      },
+    });
+  }, [listDataSet]);
+
+  // 操作栏：c7nOperatorRender（choerodon-ui 项目专用；Hzero-UI 项目才用 operatorRender）
+  const actionRenderer = ({ record }) => {
+    const operators = [
+      {
+        key: 'edit',
+        ele: <a onClick={() => handleEdit(record)}>{intl.get('hzero.common.button.edit').d('编辑')}</a>,
+        len: 2,
+      },
+      {
+        key: 'delete',
+        ele: <a onClick={() => handleDelete(record)}>{intl.get('hzero.common.button.delete').d('删除')}</a>,
+        len: 2,
+      },
+    ];
+    return c7nOperatorRender(operators);
+  };
+
+  const buttons = () => [
+    <Button color="primary" icon={<PlusOutlined />} onClick={handleAdd} funcType="raised" key="create">
+      {intl.get('{service}.{module}.xxx.create').d('新建')}
+    </Button>,
+  ];
+
+  return (
+    <div className={styles.wrapper}>
+      <Table
+        dataSet={listDataSet}
+        queryBar="filterBar"
+        queryBarProps={{ fuzzyQuery: false }}
+        bordered={false}
+        autoHeight={{ type: 'maxHeight', diff: 48 }}
+        mode="list"
+        rowNumber
+        buttons={buttons()}
+      >
+        <Table.Column name="code" width={140} sortable />
+        <Table.Column name="name" minWidth={200} sortable />
+        <Table.Column name="status" width={100} renderer={({ record }) => <StatusTag status={record.get('status')} />} />
+        <Table.Column name="creationDate" width={180} sortable />
+        <Table.Column name="action" renderer={actionRenderer} width={160} lock="right" />
+      </Table>
+    </div>
+  );
+};
+
+// 多语言注册：一个功能模块只在入口页面引入一次；hzero.common 无需注册
+export default formatterCollections({ code: ['{service}.{module}'] })(XxxList);
+```
+硬性约定（v2.5.1，对齐官方文档《编写页面》+ crm-demo）：
+- 组件用 `React.FC`，状态创建用 `useMemo`，事件处理用 `useCallback`（**不引入 mobx observer**，纯函数式）
+- **入口组件名与所在文件夹同名**（《编写页面》：`index.tsx` 导出的组件名称为所在文件夹的名称，如 `MyWorktime/index.tsx` 内为 `const Myworktime` 组件名 `MyWorktime`）；组件声明上方加文件头注释块（组件说明 + `@date/@author/@version/@copyright`）
+- **import 分块顺序**（《编写页面》）：第三方包（react/choerodon-ui/@ant-design/icons 等）-> 本地绝对路径（`utils/*`、`components/*` 别名）-> 本地相对路径（`./Drawer`、`../stores/XxxDs`），**分块之间空一行**
+- **入口导出必须 `formatterCollections({ code: ['{service}.{module}'] })(Component)` 包裹**（function 组件写法；class 组件用 `@formatterCollections` 装饰器，本技能不用）；**一个功能模块只在入口页面引入一次，子组件不再包裹**；`hzero.common` 的多语言不需要引入
+- **表格列用 `<Table.Column name="xxx" ... />` JSX 声明式写法**（禁止 columns 数组 + 页面内查询条 Form 的做法）
+- **操作栏多按钮一律 `c7nOperatorRender(operators, record, { limit })` 渲染**（`utils/utils` 导出；choerodon-ui 项目专用，Hzero-UI 项目才用 `operatorRender`）：完整三参数签名，第三参数可选（`limit` 配置收进下拉菜单的按钮数阈值，默认 3）；operators 数组元素 `{ key, ele, len, title }`（`len` 为按钮占用中文宽度数，`title` 为悬浮提示文本），超过 limit 自动收进下拉菜单并限制单按钮宽度，防止切换语言后按钮被挤出；**禁止手写 `<span>` 拼 `<a>` 的操作栏**
+- `queryBar="filterBar"`（TableQueryBarType.filterBar）+ `queryBarProps={{ fuzzyQuery: false }}`；`bordered={false}`、`autoHeight={{ type: 'maxHeight', diff: 48 }}`、`mode="list"`、`rowNumber`；自定义查询区（查询字段不在 DataSet queryFields 内）才用独立 `FilterForm.tsx`
+- 工具栏按钮：`buttons={() => [<Button color="primary" funcType="raised" icon={<PlusOutlined />}>...]}`（`funcType="raised"` 为凸起样式）
+- 新增：`new DataSet(formDs())`；编辑：`formDataSet.loadData([record.toJSON()])`（**用 `toJSON()`**）；提交 `await formDataSet.submit()` 并判断 `result.success`，**失败 `return false` 保持弹窗打开**
+- 弹窗：`Modal.open({ title, drawer: true, width: 540, children: <Drawer dataSet={formDataSet} />, onOk })`（**drawer 模式侧滑**，1.6.8 ModalProps.drawer）；新增/编辑抽屉内容组件统一命名 `Drawer.tsx`，与 `index.tsx` 同目录；无实际意义的包裹标签用 **`React.Fragment`**（`<></>` 或 `<React.Fragment>`）
+- 成功提示 `message.success` 后 `listDataSet.query()` 刷新
+
+#### 4.2.6 新增/编辑抽屉组件模板（`src/pages/{Module}/{Page}/Drawer.tsx`）
+> 《编写页面》：新增/编辑抽屉组件命名 **`Drawer.tsx`，与页面 `index.tsx` 同目录**（v2.4 前的 `components/XxxForm.tsx` 写法已废弃，冲突点 C2）。纯展示组件，接收 `dataSet` prop，**用 `<dataSet.Field name="xxx" />` 渲染字段**（从 DataSet 实例取 Field，由字段配置自动匹配控件类型/快码下拉），不写显式 TextField/Select。
+
+```tsx
+import React from 'react';
+import { Form } from 'choerodon-ui/pro';
+import type { DataSet } from 'choerodon-ui/pro';
+
+interface DrawerProps {
+  dataSet: DataSet;
+}
+
+const Drawer: React.FC<DrawerProps> = ({ dataSet }) => {
+  return (
+    <Form dataSet={dataSet} columns={2}>
+      <dataSet.Field name="code" />
+      <dataSet.Field name="name" />
+      <dataSet.Field name="status" />
+      <dataSet.Field name="remark" colSpan={2} />
+    </Form>
+  );
+};
+
+export default Drawer;
+```
+
+#### 4.2.7 详情页模板（`src/pages/{Module}/{Page}/XxxDetail.tsx`，可选）
+> 与 crm-demo `CustomerDetail.tsx` 一致：`useParams()` 取主键 → services 拉详情 → `loadData([res])`，`<Form disabled>` 只读展示。
+
+```tsx
+import React, { useMemo, useEffect } from 'react';
+import { DataSet, Form } from 'choerodon-ui/pro';
+import { formDs } from '../stores/XxxDs';
+import { useParams } from 'react-router-dom';
+import { queryXxxDetail } from '../../services';
+
+const XxxDetail: React.FC = () => {
+  const { xxxId } = useParams();
+  const formDataSet = useMemo(() => new DataSet(formDs()), [xxxId]);
+
+  useEffect(() => {
+    if (xxxId) {
+      queryXxxDetail(xxxId).then((res) => {
+        if (res) {
+          formDataSet.loadData([res]);
+        }
+      });
+    }
+  }, [xxxId, formDataSet]);
+
+  return (
+    <Form dataSet={formDataSet} columns={2} disabled>
+      <formDataSet.Field name="code" />
+      <formDataSet.Field name="name" />
+      <formDataSet.Field name="status" />
+      <formDataSet.Field name="remark" colSpan={2} />
+    </Form>
+  );
+};
+
+export default XxxDetail;
+```
+
+#### 4.2.8 服务层模板（`src/services/index.ts`）
+> 与 crm-demo `services/index.jsx` 一致：每个 API 一个 `export async function`，命名 `queryXxxList/createXxx/updateXxx/deleteXxx/queryXxxDetail`；URL 用 `API_HOST` + `getCurrentTenantId()` 拼接；返回 `request(url, { method, data | params })`。
+
+```ts
+import request from 'utils/request';
+import { API_HOST } from 'utils/config';
+import { getCurrentTenantId } from 'utils/utils';
+
+// 列表查询（transport.read 也可直接走本方法）
+export async function queryXxxList(params: Record<string, any>) {
+  const url = `${API_HOST}/crm/v1/${getCurrentTenantId()}/xxx`;
+  return request(url, { method: 'GET', params });
+}
+
+export async function createXxx(data: Record<string, any>) {
+  const url = `${API_HOST}/crm/v1/${getCurrentTenantId()}/xxx`;
+  return request(url, { method: 'POST', data });
+}
+
+export async function updateXxx(id: number, data: Record<string, any>) {
+  const url = `${API_HOST}/crm/v1/${getCurrentTenantId()}/xxx/${id}`;
+  return request(url, { method: 'PUT', data });
+}
+
+export async function deleteXxx(id: number) {
+  const url = `${API_HOST}/crm/v1/${getCurrentTenantId()}/xxx/${id}`;
+  return request(url, { method: 'DELETE' });
+}
+
+export async function queryXxxDetail(id: number) {
+  const url = `${API_HOST}/crm/v1/${getCurrentTenantId()}/xxx/${id}`;
+  return request(url, { method: 'GET' });
+}
+```
+> 说明：列表页的 DataSet 自带 transport，可覆盖 `read` 走 `queryXxxList`（transport.read = ({ data }) => queryXxxList(data)）；crm-demo 的 customer 页在 ds 文件内直接写 URL，formula 页走 mock，两种方式均合法，优先 ds 文件内 URL + services 提供详情/删除等非表格接口。
+
+#### 4.2.9 路由配置模板（`config/config.ts` + `src/routes-config.tsx`）
+> 对齐 crm-demo `config/config.ts` 与官方文档《新服务开发》《配置路由》：UMI routes 声明式路由，`component` 用相对 `./{Module}/{Page}`；**`registerRegex` 必须收敛为模块统一路由前缀**（按需加载），**`authorized: true` 仅用于免菜单直访页面**。
+
+```ts
+import { extendParentConfig } from '@hzerojs/plugin-micro';
+
+export default extendParentConfig({
+  webpack5: {},
+  routes: [
+    // 通过菜单访问的页面：路由不加 authorized，需在「菜单配置」页面配置后访问
+    {
+      path: '/worktime/xxx',
+      name: '{页面}',
+      title: '{页面}',
+      component: './Worktime/Xxx',
+    },
+    // 仅 URL 直访的页面：authorized: true + title（免菜单配置；开发期调试可临时加，联调完删除）
+    {
+      path: '/worktime/xxxDetail/:xxxId',
+      name: '{页面}详情',
+      title: '{页面}详情',
+      authorized: true,
+      component: './Worktime/XxxDetail',
+    },
+  ],
+  hash: true,
+  hzeroMicro: {
+    microConfig: {
+      // 必须改为子模块统一路由前缀（默认 '\\/.*' 会首屏加载全部子模块路由，禁止保留）
+      // 前缀需覆盖模块全部路由：本项目含 PC 端 /worktime/** 与移动端 /m/worktime/**
+      registerRegex: '\\/(m\\/)?worktime',
+    },
+  },
+});
+```
+硬性约定（《新服务开发》《配置路由》）：
+- **`registerRegex` 禁止保留默认 `\\/.*`**：必须改为本模块统一路由前缀（如 `\\/exam`、本项目 `\\/(m\\/)?worktime`），实现按需加载；前缀必须覆盖模块全部路由（含移动端 `/m/...`）
+- **`authorized: true` 语义**（配 `title`）：仅用于**无需菜单配置、直接 URL 访问**的页面；需要通过菜单访问的页面在「菜单配置」页面配置，路由项**不写** `authorized`（开发期临时直访可加，联调完成后删除）
+- 路由 `path` 与 `prototype-spec.json` 的 `navigation` 对应；详情页用 `/:xxxId` 参数，组件内 `useParams()` 取
+- `src/routes-config.tsx`：动态路由入口，默认 `export const addRoutes = async () => []`（按 crm-demo 原样）
+- `src/typings.d.ts`：声明 `*.css/*.less/*.png/*.svg` 模块（按 crm-demo 原样）
+- `config/config.dev.ts`：**不使用 extendParentConfig**，配置开发环境后端地址：
+```ts
+// UMI_ENV=dev 开发配置（不使用 extendParentConfig）
+export default {
+  define: {
+    'process.env': {
+      API_HOST: 'http://localhost:8080',
+      WEBSOCKET_HOST: 'ws://localhost:8080',
+    },
+  },
+};
+```
+
+#### 4.2.10 状态列渲染模板（`src/pages/{Module}/{Page}/StatusTag.tsx`，与 index.tsx 同目录）
+> 与 crm-demo `StatusTag.jsx` 一致：`choerodon-ui` 的 `Tag` + colorMap/textMap 映射；枚举值以 `prototype-spec.json` 字段枚举为准。
+
+```tsx
+import React from 'react';
+import { Tag } from 'choerodon-ui';
+
+interface StatusTagProps {
+  status: string;
+}
+
+const StatusTag: React.FC<StatusTagProps> = ({ status }) => {
+  const colorMap: Record<string, string> = {
+    DRAFT: 'blue',
+    ACTIVE: 'green',
+    DISCONTINUED: 'red',
+  };
+  const textMap: Record<string, string> = {
+    DRAFT: '草稿',
+    ACTIVE: '启用',
+    DISCONTINUED: '停用',
+  };
+  return <Tag color={colorMap[status]}>{textMap[status]}</Tag>;
+};
+
+export default StatusTag;
+```
+
+#### 4.2.11 Mock 数据模板（`src/pages/{Module}/mock/index.ts`，可选）
+> 与 crm-demo `formula-design/mock/index.js` 一致：后端未就绪/联调阶段使用。`export const xxxList = [...]`，**每条含 `xxxName` 展示字段**（如 `statusName/productTypeName`，对应列表 `xxxMeaning` 列）；ds 文件的 transport.read 用 Promise + setTimeout 模拟并做前端筛选。
+
+```ts
+export const xxxList = [
+  {
+    id: 1,
+    code: 'XXX001',
+    name: '示例一',
+    status: 'ACTIVE',
+    statusName: '启用',
+    creationDate: '2024-01-15 10:30:00',
+  },
+  // ... ≥5 条（枚举覆盖全部取值）
+];
+```
+ds 文件 transport.read 模拟（Promise 返回 `{ data, total, success }`，按查询参数筛选）：
+```ts
+transport: {
+  read: (config) =>
+    new Promise((resolve) => {
+      setTimeout(() => {
+        const { params } = config;
+        let filteredData = [...xxxList];
+        if (params.name) {
+          filteredData = filteredData.filter((item) => item.name.includes(params.name));
+        }
+        resolve({ data: filteredData, total: filteredData.length, success: true });
+      }, 300);
+    }),
+},
+```
+
+#### 4.2.12 国际化约定（formatterCollections + intl）
+> v2.5.0 对齐《编写页面》：**页面入口必须用 `formatterCollections` 注册多语言 code**，否则 `intl.get` 取不到服务端多语言。
+
+- **入口注册（必须）**：`import formatterCollections from 'utils/intl/formatterCollections';` + `export default formatterCollections({ code: ['{service}.{module}'] })(XxxPage);`（function 组件高阶包裹写法）
+  - class 组件装饰器写法 `@formatterCollections({ code: [...] })` + `import prompt from 'utils/intl/prompt';` 仅作参考，本技能统一 function 组件，**不生成装饰器写法**
+  - **`hzero.common` 中的多语言不需要在页面引入**（宿主已全局注册，如 `hzero.common.button.edit` 可直接用）
+  - **一个功能模块只需在入口页面（index.tsx）引入一次**，Drawer/FilterForm/Modal 等子组件不重复包裹
+- 所有 `label/title/message/按钮文案` 一律 `intl.get('{app}.{module}.{key}').d('中文默认文案')`（key 小写点分，如 `worktime.myReport.create`）；公共按钮/提示优先复用 `hzero.common.*`（如 `hzero.common.button.edit`、`hzero.common.notification.success`）
+- 公共文案统一前缀：`{service}.{module}.common.createSuccess/updateSuccess/deleteSuccess/confirmDelete/confirmDeleteContent/edit/delete`
+- 默认文案 `.d('...')` 即中文，不额外建 locale 文件（与 crm-demo 一致）
+
+#### 4.2.13 与原型 mockData 的联调约定
+- 前端联调/单测阶段，可直接将 `prototype-spec.json` 的 `mockData.xxxDS` 作为 DataSet 初始数据（`new DataSet({ ...listDs(), data: prototypeMockData.xxxDS })`）或作为 transport.read 的假响应
+- **字段名必须一致**：mockData 字段名与 DataSet fields 完全一致（原型设计门禁已保证），前端代码禁止改名
+- 枚举展示：`lookupCode` 字段在 mock 联调阶段无后端值集时，用 `lookupData` 本地选项替代（`{ value, meaning }`）
+
+#### 4.2.14 官方文档规范覆盖与冲突标注（v2.5.1）
+> 本节记录 v2.4.0 → v2.5.0 依据《编写页面》《配置路由》《新服务开发》三份官方文档所做的规则调整。**文档与 crm-demo 骨架约定冲突时，一律以官方文档为准**：
+
+| # | 冲突点 | 原 v2.4.0 规则（crm-demo 风格） | 新 v2.5.0 规则（以文档为准） | 依据 |
+|---|--------|-------------------------------|------------------------------|------|
+| C1 | 页面目录命名 | `src/pages/{module}/{page}`，module 小写、page kebab-case（如 `worktime/report-edit`） | `src/pages/[功能模块]/具体页面`，**两级均 PascalCase**（如 `Worktime/ReportEdit`） | 《编写页面》 |
+| C2 | 页面组件文件位置与命名 | `components/XxxForm.tsx` 子目录 | 组件文件**与 index.tsx 同目录**；新增/编辑抽屉统一命名 **`Drawer.tsx`**，查询表单 `FilterForm.tsx`，业务弹窗 `XxxModal.tsx` | 《编写页面》 |
+| C3 | 多语言注册 | 裸用 `intl.get().d()`，无 code 注册 | 入口必须 `formatterCollections({ code })(Component)` 包裹导出；`hzero.common` 不需引入；一模块一入口 | 《编写页面》 |
+| C4 | 操作栏渲染 | 自定义 `actionRenderer` 手写 `<span><a>...</a></span>` | **`c7nOperatorRender(operators)`**（choerodon-ui 项目；Hzero-UI 才用 `operatorRender`），`{ key, ele, len }`，超 3 个自动收下拉 + 限宽防挤出 | 《编写页面》 |
+| C5 | ds 文件位置 | 每页面 `dsConfig.ts` 与页面同目录 | ds 文件放 **`[功能模块]/stores/`**（也可集中 `src/stores/`） | 《配置路由》 |
+| C6 | registerRegex | 保留默认 `'\\/.*'` | **必须收敛为模块统一路由前缀**（如 `\\/(m\\/)?worktime`），实现按需加载 | 《新服务开发》 |
+| C7 | authorized 语义 | 所有路由统一 `authorized: true` | `authorized: true` + `title` **仅用于免菜单直访页面**；菜单访问页面在「菜单配置」配置且不写 authorized（开发期临时标记联调完删除） | 《新服务开发》《配置路由》 |
+| C8 | 工程形态与包管理 | 独立前端工程，npm/yarn 语义未约束 | **父工程 + `packages/hzero-front-{service}` 子模块 monorepo**；包管理**优先 pnpm**（HZero npm group 源）；单模块启动调试（热刷新）、全局启动先 `pnpm build:ms` | 《新服务开发》 |
+| C9 | 环境变量 | `config.dev.ts` 导出空对象 | `config.dev.ts`/`config.ts` 配置 `API_HOST`/`WEBSOCKET_HOST`（`define['process.env']`），代码内 `process.env.xxx` 获取 | 《新服务开发》 |
+| C10 | 入口组件命名 | 组件名加 `Page`/`List` 后缀（如 `XxxList`） | **入口组件名 = 所在文件夹名**（`MyWorktime/index.tsx` 内组件名 `MyWorktime`），并加文件头注释块（`@date/@author/@version/@copyright`） | 《编写页面》 |
+| C11 | import 顺序 | 单块平铺，无分块约定 | **三块分栏 + 块间空行**：第三方包 -> 本地绝对路径（`utils/*`/`components/*`）-> 本地相对路径 | 《编写页面》 |
+| C12 | 操作栏完整签名 | `c7nOperatorRender(operators)` 单参数 | **`c7nOperatorRender(operators, record, { limit: n })`** 三参数（`limit` 默认 3 可配）；operators 元素补 `title` 悬浮提示字段 | 《编写页面》 |
+
+> 未冲突而延续 crm-demo 的约定（文档未规定、不构成冲突）：`Table.Column` JSX 声明式列、`queryBar="filterBar"`、`Modal.open({ drawer: true })`、`<dataSet.Field />`、`React.FC + useMemo/useCallback`、`API_HOST + getCurrentTenantId()` 拼 URL、peerDependencies 依赖声明（⑤审查结论）、TypeScript 语言基线与组件白名单（choerodon-ui 1.6.8 真实导出）。
+> v2.5.1 补充（《编写页面》明确、原技能未成文）：无实际意义的包裹标签用 `React.Fragment`；《编写页面》的 class 组件 + dva `connect`/`mapStateToProps` 写法为旧版示例，本技能维持 function 组件 + DataSet 模式（文档同时给出 function 写法，且《配置路由》明确「Dataset 模式，ds+axios 直接使用」）。
+
+### 4.3 代码质量硬性要求
+1. **后端**：生成代码必须可直接编译（`mvn compile` 通过）；包名/注解/继承必须与 demo 工程一致（Lombok、BaseController、BaseRepository、AuditDomain）
+2. **前端**：生成代码必须通过 `tsc --noEmit`（无 TS 类型错误）+ ESLint（无ERROR级问题）
+3. **TS 强类型**：ds 工厂返回 `DataSetProps`、字段使用 `FieldProps`、组件 Props 使用 `React.FC<Props>`、状态对象用 `Record<string, any>`，禁止 `any` 滥用
+4. **组件白名单**：仅使用 `choerodon-ui` / `choerodon-ui/pro` 1.6.8 真实导出组件（对照 `components/index.tsx`、`components-pro/index.tsx`）+ **HZERO 平台独有组件**（`components/*` 宿主别名，清单见 4.2.1 平台资产白名单，属性以 `kb/08-工具使用/前端资产/` 文档为准），图标用 `@ant-design/icons`；禁止从组件库导入 1.6.8 不存在的组件（如 `Drawer` 组件——**页面抽屉内容组件文件命名 `Drawer.tsx` 不受此限**，它不是组件库导入）、禁止 antd 组件库
+5. **注释**：类注释（类说明+作者+日期）、方法注释（Javadoc / JSDoc）、关键逻辑行内注释
+6. **命名**：类名/组件PascalCase、方法/变量camelCase、常量UPPER_SNAKE_CASE、TS 接口 `XxxProps`/`XxxFormProps`；数据库表名大写下划线
+7. **禁止**：System.out.println、硬编码魔法数、未使用import、重复代码、`console.log` 残留
+
+### 4.4 工程纪律层（v2.8.0 新增，方法论源自 dev-expert 技能）
+
+> **定位**：4.1/4.2 解决「生成什么」（HZERO/crm-demo 专有模板），本节解决「怎么生成才不出错」（跨语言通用纪律）。**本节为插件式叠加，不修改 4.1/4.2 任何技术基线**；两者冲突时以 4.1/4.2 的工程实证为准（见 4.4.7）。
+>
+> 启用条件：意图三分法判定为**复杂任务**（多文件 / 跨模块 / 数据持久化 / 安全敏感）时全节强制；简单任务仅强制 4.4.3 五戒自查。
+
+#### 4.4.1 规划门禁 PLAN-GATE（编码前强制打勾）
+
+生成代码属「多文件产出」的复杂任务，进入 Step 2 前按三池打勾。任一 A 池项未过 → 不得开始生成。
+
+**A 池：无条件核心项**
+
+```
+☐ A1. 需求→步骤映射完整：dev-plan.tasks 每条任务都有对应产出文件，无遗漏
+☐ A2. 步骤含出口校验：每步有可判定完成标准（如「Entity 通过 mvn compile」，不写"然后检查"）
+☐ A3. 数据/外部依赖已标注：tables、apiDesign、三方依赖、配置项显式列出
+☐ A4. 风险点已识别：字段类型冲突、命名冲突、跨模块依赖风险各自配缓解动作
+☐ A5. 验证方式已定义：每步写明证据类型（编译输出/tsc 结果/测试报告）
+☐ A6. 回滚机制已定义：覆盖已有文件前标注备份点（本项目生成到 artifacts/ 为新增，覆盖场景须 .bak）
+☐ A7. 产出规模已确认：预计生成文件数 / 表数 / API 数明确
+☐ A8. 安全触发面已评估：外部输入/权限注解/租户隔离/SQL 拼接逐项过
+☐ A9. 用户定制文件已遍历：不覆盖手工改动过的生成物
+☐ A10. 中断点与恢复路径：失败后回退到哪一步已写明
+```
+
+**B 池：条件触发项**（未命中写 N/A + 原因）
+
+```
+☐ B1. 涉数据库 → Liquibase 变更集回滚方案已就绪（dropTable 或逆向 changeSet）
+☐ B2. 涉新依赖 → 版本对齐 hzero-parent 1.11.5，禁止浮动版本
+☐ B3. 涉并发/幂等 → HZERO 场景过 objectVersionNumber 乐观锁 + 唯一约束
+☐ B4. 涉性能敏感 → 分页/批量接口已用 PageHelper，禁无界查询
+☐ B5. 涉跨服务 → Feign 接口 + fallback 齐备，调用方兼容性已确认
+☐ B6. 涉单元测试 → Service 测试骨架已列入产出（见 4.1.11）
+☐ B7. 涉批处理 → 批量 saveData 分批策略已就绪
+☐ B8. 涉覆盖已有文件 → 备份点已标注
+☐ B9. 涉多文件 → 依赖影响面已查（grep 复核，不单凭记忆）
+☐ B10. 涉脚本/命令 → 参数完整，无硬编码绝对路径
+☐ B11. 方案需回读 → 生成后已回读确认无乱码/截断
+```
+
+**C 池：规模触发项**
+
+```
+☐ C1. 生成文件 ≥ 5 或修改点 ≥ 10 → 每 5 文件落一次 CHECKPOINT（进度 + 已验证证据）
+☐ C2. 任务超长 → 拆子任务链式执行，每阶段落检查点
+```
+
+**规划自审**（PLAN-GATE 通过后执行）：① 占位符扫描（无 `TODO`/`{未定义}` 残留）；② **签名一致性**（引用的 `packageName`/`serviceCode`/字段名/API 路径与实际工程一致，禁臆造）；③ 需求→步骤反向核对；④ **引用点实码 trace**——对 4.1/4.2 中引用的每个 HZERO API（`BaseRepository`、`PageHelper.doPageAndSort`、`SecurityTokenHelper`、`c7nOperatorRender` 等），须用 grep 在 demo/crm-demo 工程确认存在且签名一致，**禁止凭记忆写 API**。
+
+#### 4.4.2 风格嗅探与对齐（二开/改现有文件时强制）
+
+> **背景**：本技能 4.1/4.2 的模板锚定的是 demo/crm-demo 骨架。但真实场景常是**在已有 HPIS-PMS 工程内新增模块**——此时既有代码的实际风格优先于技能模板。
+
+**触发**：目标目录已存在同类型文件（改现有工程、二次开发）→ 强制启用。目标为全新工程 → 跳过。
+
+**三步动作**：
+
+1. **取样代表性文件**：按目标类型各取 1–2 个**已存在**文件，优先取**与目标目录/模块相同**的（风格最贴近）。若项目根有 `.editorconfig`/`.prettierrc`/`.eslintrc`/`checkstyle.xml`，**优先读之**作为权威基线（高于人工嗅探）。
+2. **提取风格标记**：
+
+| 标记 | 后端（Java） | 前端（TS/TSX） |
+|------|-------------|---------------|
+| 缩进 | 4 空格 / tab | 2 空格 / tab |
+| 括号位置 | K&R / Allman | — |
+| 注解/导入顺序 | import 分组习惯 | 三块分栏是否一致 |
+| 命名 | 字段 camelCase / 常量 UPPER_SNAKE | 组件 PascalCase / hook camelCase |
+| 注释头 | 类注释格式（`@author`/`@since` 有无） | 文件头注释块格式 |
+| 空行/折行 | 方法间空行、链式调用折行 | JSX 属性折行习惯 |
+| 特有约定 | 本项目包结构（是否有 pms-review 等额外模块） | 本项目 utils 别名扩展 |
+
+3. **产出「风格基线」块**（生成前必输出）：
+
+```
+## 风格基线（取自 <文件1>, <文件2>）
+- 缩进: 4 空格
+- 包结构: 沿用 com.hand.hpis.pms.{module} 五层分包
+- 注释头: 类注释含 @author/@since（与既有 Service 一致）
+- import 顺序: 三块分栏（第三方 -> utils/* -> 相对路径）
+- ...
+```
+
+生成的每一行都对齐该基线。**基线某项与 4.1/4.2 技术基线冲突时以 4.1/4.2 为准**（如既有代码用 `@Autowired` 字段注入但 4.1.7 规定 Repository 用 `@Resource`），并标注偏差原因。
+
+**兜底**：目标项目确无参照文件 → 用 4.1/4.2 模板 + 4.3 质量要求，标注「无原项目风格可参照」。
+
+#### 4.4.3 防 AI 通病五戒（生成后逐条自查）
+
+AI 生成代码的高频通病，交付前必须自查：
+
+```
+☐ 戒过度工程化：不为"未来可能"引入抽象类/接口/配置对象。单表 CRUD 不需要 DomainService，
+   dev-plan 未要求的 domain/service 层不生成（Karpathy 红线）
+☐ 戒幽灵代码：不写无法触达的代码（未被调用的 private 方法、永不成立的分支）。
+   生成后 grep 确认每个方法有调用点
+☐ 戒假注释：注释解释"为什么"而非复述代码。禁止 `// 设置名称` 配 `setName()` 式废话；
+   禁止复制粘贴导致的过时注释（如注释写"分页查询"但方法实际是批量保存）
+☐ 戒万能 try-catch：禁止吞异常的 catch。HZERO 场景应让异常冒泡给框架统一处理，
+   或 catch 后明确抛 KnownException；禁止 `catch (Exception e) { return null; }`
+☐ 戒无业务语义命名：用 `worktimeHours` 而非 `num1`，`totalWorktimeOfDay` 而非 `sum`。
+   与 prototype-spec.json 字段名保持一致，禁止自创缩写
+```
+
+#### 4.4.4 NFR 显式决策（复杂任务强制，禁止留白）
+
+针对 `dev-plan.json` 中的每个写操作接口，生成前逐项判定。**留白视为未完成**，无需处理项须写明理由。
+
+| NFR 维度 | 必须回答 | HZERO 场景默认处理 |
+|---------|---------|-------------------|
+| 并发/竞态 | 是否存在共享可变状态？并发写是否可能？ | `AuditDomain` 自带 `objectVersionNumber`；高并发场景加 HZERO 分布式锁 |
+| 幂等 | 写操作重复调用是否产生副作用？ | `saveData` 按主键分流天然幂等；业务唯一性靠 DB 唯一约束（见 4.1.9 `addUniqueConstraint`） |
+| 重试/超时 | 外部调用（Feign/Redis）是否有超时上限？ | Feign 配 hystrix 超时；重试须幂等且有退避 |
+| 降级 | Feign 依赖不可用时的行为？ | fallback 类须明确返回（空列表 / 抛异常 / 缓存兜底），禁止 fallback 里 `return null` |
+| 容量/规模 | 数据量增长到 N 时是否仍正确？ | 列表接口**必须** `PageHelper.doPageAndSort`，禁无分页全量查询 |
+| 可观测性 | 关键路径是否有日志？ | Service 关键决策与异常须有 `logger`，禁静默吞异常 |
+| 安全 | 外部输入是否校验？权限是否兜底？ | `validObject()` + `@Permission`；SQL 参数化（4.1.6 `#{}` 占位） |
+
+**输出**：在阶段报告「关键结论」章节补 NFR 决策表（格式见 4.4.5）。
+
+#### 4.4.5 生成物自查清单（Step 8 门禁前执行）
+
+> 与既有 L2/L3 门禁互补：L2/L3 验「产出了什么」，本清单验「产出得对不对」。
+
+**清单化质量自审**（逐条打勾，任一 ❌ 回 Step 3/4）：
+
+```
+☐ 异常处理完备（业务异常用 KnownException，非空判断齐全）
+☐ 硬编码常量已提取（枚举/状态值放 Constants.java 或前端常量文件）
+☐ SQL 已参数化（Mapper XML 全用 #{}，无 ${} 拼接；动态排序字段须白名单）
+☐ 输出已转义（前端渲染用户输入时；HZERO 表格默认转义）
+☐ 敏感信息不入日志/返回值（密码/Token 不落 log）
+☐ 租户隔离完整（写操作 setTenantId，查询带 tenantId 条件）
+☐ 超时/重试已设上限（Feign/hystrix）
+☐ 并发场景已处理（乐观锁字段或分布式锁）
+☐ 接口幂等性已保证（写操作唯一约束）
+☐ 注释与代码一致（无过期注释、无假注释）
+```
+
+**覆盖完整性枚举**（对称/形态/调用方/分支四面全过）：
+
+```
+☐ 对称操作全覆盖：生成"新增"须同时生成"编辑/删除/查看"同契约路径；
+  生成"导出"须同时生成"导入"
+☐ 数据形态全覆盖：空数据 / 单条 / 边界值 / 超大数据 / 非法输入逐项过
+☐ 调用方全覆盖：改了 Service 签名，所有 Controller 调用点都过编译
+☐ 分支全覆盖：if/else、switch 各分支都有实现，不跳过 else/异常分支
+```
+
+**配对契约与迁移完整性**（前端 DataSet 字段 ↔ 后端 Entity 字段为核心风险面）：
+
+```
+☐ 字段名同源：prototype-spec.json 字段名 == dev-plan tables 列名（camelCase）== 前端 DataSet fields.name
+☐ 对称断言：「DS 字段名 == 后端实体字段名」每一处都核对，禁抽样
+☐ 无混用残留：grep 确认无旧字段名残留、无新旧 API 路径混用
+```
+
+#### 4.4.6 架构一致性铁律（在既有工程内新增模块时强制）
+
+```
+☐ 范式唯一：既有工程是 DDD 五层就继续五层；不因个人偏好引入新模式
+☐ 对称契约同源：同名操作（增删改查、导入导出）的入参/出参/错误码定义同源复用，禁各写一套
+☐ 模块边界一致：新增代码放既有模块体系内（如 pms-service 下），不新建孤立"万能工具"目录
+☐ 半迁移 = 0：不允许"一半 Lombok 一半手写 Getter"的过渡态留在交付里
+☐ 复用优先级：先复用既有工具类 → 再参数化合并 → 最后才新写；新写前须说明为何不能复用
+```
+
+> 判定基准：**以现有代码实际风格为规范**，而非"我认为更好"的通用最佳实践。改样式先看周边代码怎么写的。
+
+#### 4.4.7 本层与 HZERO 基线的优先级声明
+
+**冲突裁决顺序**（高 → 低）：
+
+1. **HZERO/crm-demo 工程实证**（4.1/4.2，逐行对照过真实源码）
+2. **本工程既有代码风格**（4.4.2 嗅探结果）
+3. **本技能内置模板**（4.1/4.2 模板片段）
+4. **dev-expert 通用最佳实践**（4.4 其余各节）
+
+即：通用方法论**不得**推翻 HZERO 工程实证。典型不适用场景（已识别，勿生搬）：
+
+| dev-expert 建议 | 在本技能场景的裁决 |
+|----------------|------------------|
+| 抽象出 DomainService | 仅当 dev-plan 明确有跨实体事务/状态机时才生成；否则**不生成**（4.1.2 已注明"如需要"） |
+| Repository 用构造注入 | HZERO demo 用 `@Resource` 字段注入，**以 demo 为准**（4.1.5） |
+| 前端用 mobx observer | crm-demo 用 `React.FC + useMemo`，**不引入 observer**（4.2.5） |
+| MySQL 索引/事务建议 | 本项目是 **Oracle**，以 4.1.9 groovy 规范为准 |
+| Ant Design 组件 | **禁止**，仅 choerodon-ui 1.6.8 + `@ant-design/icons`（4.2.1） |
+
+
+## 5. 衔接方式
+
+### 5.1 与上游的接口协议
+- 读取 `dev-plan.json` 的 database/apiDesign/tasks 生成后端代码（tables→groovy+Entity+Repository+Mapper，apiDesign→Controller+Service）
+- 读取 `prototype-spec.json` 的 pages/dataSets/components/**tsImports/tsType/tsImport** 生成前端 TS 代码（页面→index.tsx，DataSet→`[功能模块]/stores/{Page}Ds.ts`，API→services/index.ts）
+- 读取 `requirement-spec.json` 的 project 获取包名（`packageName`）/服务编码（`serviceCode`）
+
+### 5.2 与下游的接口协议
+
+| 下游环节 | 交付内容 | 使用方式 |
+|---------|---------|---------|
+| ⑤代码审查 | `code-manifest.json` + 源代码 | 遍历generatedFiles审查每份代码（后端按 HZERO/demo 规范审查分层与安全，前端按 crm-demo/TS 规范审查类型与组件白名单） |
+| ⑥测试 | `code-manifest.json` + 源代码 | 基于代码清单编写和执行测试 |
+
+### 5.3 数据流转方式
+- 代码清单：`artifacts/04-code/code-manifest.json`
+- 后端源码：`artifacts/04-code/backend/`（含 `script/db/*.groovy`）
+- 前端源码：`artifacts/04-code/frontend/`（TS，crm-demo 骨架）
+- 数据库脚本：`artifacts/04-code/backend/src/main/resources/script/db/`（Liquibase groovy）
+
+### 5.4 质量门禁标准
+
+#### L1 - 入口校验
+- [ ] `dev-plan.json` 存在且 `qualityGateStatus` = "PASSED"
+- [ ] `prototype-spec.json` 存在且 `qualityGateStatus` = "PASSED"
+- [ ] `prototype-spec.json.tsImports` 存在（core/pro/types）
+- [ ] `requirement-spec.json.project` 含 `serviceCode`/`packageName`
+
+#### L2 - 过程校验
+- [ ] **（v2.8.0）复杂任务已过 PLAN-GATE 三池打勾 + 规划自审（含引用点实码 trace）**
+- [ ] **（v2.8.0）改现有工程时已产出「风格基线」块（见 4.4.2）**
+- [ ] **（v2.8.0）写操作接口已出 NFR 决策表（7 维无留白，见 4.4.4）**
+- [ ] 每个数据库表生成对应Entity类（Lombok `@Getter/@Setter` + 继承 `AuditDomain`）
+- [ ] 每个Entity生成Repository接口 + Mapper接口 + Mapper XML（namespace 正确、Oracle jdbcType）
+- [ ] **每个表生成一份 Liquibase groovy 建表脚本**（含审计五列，Oracle 兼容）
+- [ ] 每个API定义生成Controller方法（list/detail/save/remove 标准四接口 + `@Permission`）
+- [ ] Service 提供 `selectList(PageRequest, T)` + `saveData(List<T>)`，分页用 `PageHelper.doPageAndSort`
+- [ ] Controller 保存接口含 `SecurityTokenHelper.validTokenIgnoreInsert` + `setTenantId(organizationId)`
+- [ ] 每个页面生成前端Page组件（`src/pages/{Module}/{Page}/index.tsx`，`.tsx`，目录两级 PascalCase）
+- [ ] 每个页面生成 `{Page}Ds.ts`（`[功能模块]/stores/` 目录，工厂函数 `queryDs/listDs/formDs`，字段与原型一致）
+- [ ] 新增/编辑抽屉组件 `Drawer.tsx` 与页面 index.tsx 同目录（`.tsx`，用 `<dataSet.Field />`）
+- [ ] 页面入口 `formatterCollections({ code: ['{service}.{module}'] })` 包裹导出（一模块一入口，`hzero.common` 不注册）
+- [ ] 操作栏多按钮使用 `c7nOperatorRender(operators, record, { limit })`（`{ key, ele, len, title }`，禁止手写 span+a 操作栏）
+- [ ] 页面入口组件名与所在文件夹同名，文件头含注释块（组件说明 + `@date/@author/@version/@copyright`）
+- [ ] import 三块分栏（第三方 -> 本地绝对 -> 本地相对），块间空行；无实际意义包裹标签用 `React.Fragment`
+- [ ] `src/services/index.ts` 覆盖全部 API（`queryXxxList/createXxx/updateXxx/deleteXxx/queryXxxDetail`）
+- [ ] 所有字段 `label/按钮/提示` 使用 `intl.get().d()` 国际化
+- [ ] transport URL 使用 `API_HOST` + `getCurrentTenantId()`，与 dev-plan apiDesign 一致
+- [ ] 弹窗使用 `Modal.open({ drawer: true })`，编辑用 `loadData([record.toJSON()])`，提交判断 `result.success`
+- [ ] `registerRegex` 为模块统一路由前缀（禁止 `\\/.*`）；`authorized: true` 仅用于免菜单直访页面
+- [ ] 前端代码为 TypeScript：页面 `.tsx`、ds/services/mock `.ts`，**禁止 `.jsx` 文件**
+- [ ] 前端组件与类型引用来自 `prototype-spec.json.tsImports`
+
+#### L3 - 出口校验（验收检查项）
+- [ ] 后端编译通过率 = 100%（`mvn compile` 无错误）
+- [ ] 前端 `tsc --noEmit` 通过率 = 100%（无类型错误）
+- [ ] 文件覆盖率 = 100%（dev-plan所有任务均有对应文件）
+- [ ] 数据库脚本完整 = 100%（**所有表有 groovy 脚本**，无 MySQL 专属 DDL）
+- [ ] 路由配置完整 = 100%（config/config.ts 覆盖所有页面；`registerRegex` 为模块前缀，无 `\\/.*`）
+- [ ] 组件白名单合规 = 100%（仅 1.6.8 真实导出组件 + `@ant-design/icons` 图标）
+- [ ] 后端规范对齐 demo 工程 = 100%（Lombok 实体、`xxxController.v1` 命名、`/v1/{organizationId}/` 路径、SecurityTokenHelper）
+- [ ] 前端规范对齐 crm-demo + 官方文档 = 100%（ds 工厂函数、`Table.Column` JSX、`filterBar`、`Modal drawer`、`intl`、`API_HOST + getCurrentTenantId`、PascalCase 目录、`stores/` ds、`formatterCollections`、`c7nOperatorRender` 三参数、`registerRegex` 前缀、入口组件名=文件夹名、import 三块分栏）
+- [ ] **（v2.8.0）防 AI 通病五戒自查 = 100%**（无常驻抽象类、无幽灵代码、无假注释、无万能 try-catch、无无业务语义命名，见 4.4.3）
+- [ ] **（v2.8.0）生成物自查清单全绿**（质量自审 10 条 + 覆盖完整性 4 面 + 配对契约字段同源，见 4.4.5）
+- [ ] **（v2.8.0）架构一致性铁律合规**（范式唯一 + 半迁移=0 + 复用优先，见 4.4.6）
+- [ ] `_meta.qualityGateStatus` = "PASSED"
+
+## 6. 交付标准
+
+### 验收检查项清单
+
+| 序号 | 检查项 | 标准 | 必须 |
+|------|--------|------|------|
+| 1 | code-manifest.json已生成 | 文件存在，generatedFiles非空 | 是 |
+| 2 | 后端代码完整 | 每个表有Entity+Repository+Mapper(+XML)，每个API有Controller | 是 |
+| 3 | 后端可编译 | `mvn compile` 通过 | 是 |
+| 4 | 后端规范对齐demo工程 | Lombok实体、BaseController/BaseRepository、`xxxController.v1`、`/v1/{organizationId}/`、SecurityTokenHelper、`PageHelper.doPageAndSort` | 是 |
+| 5 | 数据库脚本 | 每表一份 groovy（Liquibase、Oracle兼容、含审计五列） | 是 |
+| 6 | 前端代码完整 | 每个页面有 `index.tsx` + `{Page}Ds.ts`（stores/）+ `index.less`，路由已配置 | 是 |
+| 7 | 前端框架对齐crm-demo+官方文档 | UMI3 微前端、`Table.Column` JSX、`filterBar`、`Modal drawer`、`<dataSet.Field />`、`intl`、`API_HOST + getCurrentTenantId`；PascalCase 目录、`Drawer.tsx` 同目录、`stores/` ds、`formatterCollections` 入口包裹、`c7nOperatorRender` 三参数操作栏、`registerRegex` 模块前缀、入口组件名=文件夹名+文件头注释、import 三块分栏 | 是 |
+| 8 | 前端 TS 类型检查 | `tsc --noEmit` 通过 | 是 |
+| 9 | 前端代码规范 | ESLint无ERROR；组件白名单合规（1.6.8 + @ant-design/icons） | 是 |
+| 10 | 注释规范 | 类/方法有注释（作者+日期），关键逻辑有注释 | 是 |
+| 11 | 命名规范 | 符合Java/TS命名规范；表名大写下划线 | 是 |
+| 12 | HZERO规范 | 继承AuditDomain、BaseRepository、@Permission、Results.success | 是 |
+| 13 | choerodon-ui规范 | 仅使用1.6.8真实导出组件，类型引用与原型tsImports一致 | 是 |
+| 14 | API路径一致 | 与dev-plan/apiDesign一致 | 是 |
+| 15 | 质量门禁 | qualityGateStatus = "PASSED" | 是 |
+| 16 | 阶段报告 | `reports/04-代码生成-阶段报告.md` 已生成，四段结构完整 | 是 |
+| 17 | **（v2.8.0）工程纪律层合规** | PLAN-GATE 已过（复杂任务）、风格基线已产出（改现有工程）、NFR 决策表无留白、防AI五戒自查全绿、架构一致性合规 | 是 |
+
+### 执行流程
+
+```
+Step 1: 读取 dev-plan.json / prototype-spec.json / requirement-spec.json，执行L1校验（含 tsImports、serviceCode/packageName）
+Step 1.5（v2.8.0 新增）: 工程纪律层前置
+  - 复杂任务 → 过 PLAN-GATE 三池打勾 + 规划自审（含 HZERO API 引用点实码 trace，见 4.4.1）
+  - 目标为既有工程 → 执行风格嗅探，产出「风格基线」块（见 4.4.2）
+  - 逐写操作接口出 NFR 决策表（见 4.4.4）
+Step 2: 生成数据库脚本 — 每个表一份 Liquibase groovy（script/db/xxx.groovy，Oracle 兼容 + 审计五列）
+Step 3: 生成后端代码 — 按任务类型逐个生成（对齐 demo 工程结构）
+  Step 3.1: 工程骨架（pom.xml / 启动类 / application.yml / bootstrap.yml / SwaggerTags / RouteExtraDataManager / Constants / messages）
+  Step 3.2: Entity（Lombok + AuditDomain + ApiModel + FIELD常量） + Repository(+Impl) + Mapper(+XML)
+  Step 3.3: Service + ServiceImpl（selectList 分页 + saveData 批量）
+  Step 3.4: Controller（list/detail/save/remove 四接口 + @Permission + SecurityTokenHelper）
+  Step 3.5: 复杂业务放 domain/service（跨实体事务、状态机），跨服务调用放 infra/feign
+Step 4: 生成前端代码 — 按页面逐个生成（TypeScript，对齐 crm-demo 工程骨架 + 官方文档规范，见 4.2.14）
+  Step 4.1: 工程骨架（package.json / tsconfig.json / config/config.ts 路由[registerRegex 模块前缀] / config.dev.ts[API_HOST] / src/typings.d.ts / src/routes-config.tsx）
+  Step 4.2: src/services/index.ts（request + API_HOST + getCurrentTenantId，覆盖全部 API：queryXxxList/createXxx/updateXxx/deleteXxx/queryXxxDetail）
+  Step 4.3: 每页 {Page}Ds.ts（[功能模块]/stores/ 目录，queryDs/listDs/formDs 工厂函数，字段与原型 dataSets[].fields 一致 + intl + lookupCode/lookupData）
+  Step 4.4: 页面 index.tsx（React.FC + useMemo new DataSet + Table.Column JSX + filterBar + Modal drawer + buttons() + c7nOperatorRender(operators, record, { limit }) 操作栏 + formatterCollections 入口包裹导出 + 组件名=文件夹名 + 文件头注释 + import 三块分栏）
+  Step 4.5: Drawer.tsx（与 index.tsx 同目录，<dataSet.Field /> + colSpan）、StatusTag.tsx（如需要）、index.less（CSS Modules）
+  Step 4.6: 详情页 XxxDetail.tsx（useParams + queryXxxDetail + loadData + Form disabled），路由加 /:xxxId
+  Step 4.7: mock（可选：后端未就绪时 pages/{Module}/mock/index.ts + transport Promise 模拟）
+Step 5: 生成 code-manifest.json（索引所有文件，含 hzeroVersion/databaseType/frontendLanguage）
+Step 6: 后端编译验证（mvn compile）
+Step 7: 前端类型检查与Lint验证（tsc --noEmit + eslint）
+Step 8: 执行L2/L3质量门禁检查
+Step 8.5（v2.8.0 新增）: 生成物自查（见 4.4.5）
+  - 防 AI 通病五戒逐条自查（4.4.3）
+  - 清单化质量自审 10 条 + 覆盖完整性 4 面 + 配对契约字段同源核对
+  - 架构一致性铁律合规核对（4.4.6）
+Step 9: 输出代码清单路径，标记流转就绪
+```
+
+## 7. 规则对接（Harness 平台工程治理）
+
+> 规则清单与策略见工作区 `governance/rules-registry.md`、`governance/policies/`、`governance/rego-skill-mapping.md`。本环节与 Golden Path 模板（`governance/golden-path/`）强关联：**生成器 = Golden Path 模板**。
+
+- **关联规则**：FE-H0 系列（目录结构/命名/国际化/组件白名单）、BE-DEV-009（DDD 分层）、BE-DB-005（Liquibase groovy 建表）、FLOW-005/006（CI 门禁步骤）
+- **关联策略**：`policies/fe-lint-required.rego`、`policies/be-quality-gates.rego`
+- **对接方式**：生成的 CI 骨架必须包含 `eslint`（前端）/`checkstyle` + `coverage`（后端）步骤，否则流水线保存时被 OPA Error 阻断；生成后自检清单逐项引用规则 ID
+- **门禁结论**：生成物 CI 骨架不满足 FLOW-005/006 → 流水线保存被阻断，需回炉补步骤；模板生成的服务天然通过（护栏内置）

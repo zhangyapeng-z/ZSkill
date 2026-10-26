@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "skill_id": "44fadd7c-44f4-401c-8f36-a9cf8dbc8aa0",
+  "path": "html-to-pdf",
+  "path_key": "html-to-pdf",
+  "enabled": true,
+  "tags": [],
+  "source": {
+    "type": "local",
+    "ref": null,
+    "subpath": null,
+    "branch": null
+  }
+}

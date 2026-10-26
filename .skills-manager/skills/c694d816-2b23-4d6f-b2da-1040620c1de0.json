@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "skill_id": "c694d816-2b23-4d6f-b2da-1040620c1de0",
+  "path": "alex-requirements-analysis",
+  "path_key": "alex-requirements-analysis",
+  "enabled": true,
+  "tags": [],
+  "source": {
+    "type": "local",
+    "ref": null,
+    "subpath": null,
+    "branch": null
+  }
+}

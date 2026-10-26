@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "skill_id": "07792ad6-44fa-4bb7-918f-c08038060e93",
+  "path": "text-to-cad-urdf",
+  "path_key": "text-to-cad-urdf",
+  "enabled": true,
+  "tags": [],
+  "source": {
+    "type": "local",
+    "ref": null,
+    "subpath": null,
+    "branch": null
+  }
+}

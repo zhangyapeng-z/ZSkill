@@ -1,0 +1,19 @@
+id: java-controller-missing-api
+language: Java
+severity: warning
+message: Controller class must declare @Api.
+rule:
+  all:
+    - kind: class_declaration
+    - has:
+        field: name
+        kind: identifier
+        regex: '.*Controller$'
+    - not:
+        has:
+          stopBy: end
+          any:
+            - kind: marker_annotation
+              regex: '^@Api\b'
+            - kind: annotation
+              regex: '^@Api\b'
