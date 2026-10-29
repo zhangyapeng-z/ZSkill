@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "skill_id": "d186fe6b-85a2-4143-8c3c-9aca480d5df3",
+  "path": "review-bugbot",
+  "path_key": "review-bugbot",
+  "enabled": true,
+  "tags": [],
+  "source": {
+    "type": "import",
+    "ref": null,
+    "subpath": null,
+    "branch": null
+  }
+}

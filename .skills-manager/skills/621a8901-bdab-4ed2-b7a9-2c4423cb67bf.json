@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "skill_id": "621a8901-bdab-4ed2-b7a9-2c4423cb67bf",
+  "path": "archify-diagramming-2",
+  "path_key": "archify-diagramming-2",
+  "enabled": true,
+  "tags": [],
+  "source": {
+    "type": "import",
+    "ref": null,
+    "subpath": null,
+    "branch": null
+  }
+}

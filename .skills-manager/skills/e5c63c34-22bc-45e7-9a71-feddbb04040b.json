@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "skill_id": "e5c63c34-22bc-45e7-9a71-feddbb04040b",
+  "path": "minimax-docx-2",
+  "path_key": "minimax-docx-2",
+  "enabled": true,
+  "tags": [],
+  "source": {
+    "type": "import",
+    "ref": null,
+    "subpath": null,
+    "branch": null
+  }
+}

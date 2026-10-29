@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "skill_id": "442ac591-2a83-40e4-82bf-cd2ab677a4ec",
+  "path": "automate-2",
+  "path_key": "automate-2",
+  "enabled": true,
+  "tags": [],
+  "source": {
+    "type": "import",
+    "ref": null,
+    "subpath": null,
+    "branch": null
+  }
+}

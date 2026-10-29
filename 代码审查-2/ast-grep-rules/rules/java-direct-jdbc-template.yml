@@ -1,0 +1,12 @@
+id: java-direct-jdbc-template
+language: Java
+severity: error
+message: Avoid direct dependency on JdbcTemplate family types.
+rule:
+  any:
+    - kind: field_declaration
+      regex: '\b(?:JdbcTemplate|NamedParameterJdbcTemplate)\b'
+    - kind: method_declaration
+      regex: '\b(?:JdbcTemplate|NamedParameterJdbcTemplate)\b'
+    - kind: object_creation_expression
+      regex: '\b(?:JdbcTemplate|NamedParameterJdbcTemplate)\b'

@@ -1,0 +1,12 @@
+import React from 'react';
+import { Content, Header } from 'components/Page';
+import intl from 'utils/intl';
+
+const __PAGE_NAME__List = () => (
+  <>
+    <Header title={intl.get('__I18N_PREFIX__.view.title.list').d('__ROUTE_TITLE__')} />
+    <Content />
+  </>
+);
+
+export default __PAGE_NAME__List;

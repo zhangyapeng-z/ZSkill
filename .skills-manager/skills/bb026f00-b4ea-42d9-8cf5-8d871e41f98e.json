@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "skill_id": "bb026f00-b4ea-42d9-8cf5-8d871e41f98e",
+  "path": "feature-requirement-analysis-2",
+  "path_key": "feature-requirement-analysis-2",
+  "enabled": true,
+  "tags": [],
+  "source": {
+    "type": "import",
+    "ref": null,
+    "subpath": null,
+    "branch": null
+  }
+}

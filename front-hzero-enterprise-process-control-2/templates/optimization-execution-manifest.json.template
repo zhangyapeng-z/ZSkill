@@ -1,0 +1,20 @@
+{
+  "schemaVersion": "1.1",
+  "frontendExecutionMode": "demo-slice",
+  "deliveryTarget": "mock-demo",
+  "featureRoot": "sdd-workspace/changes/<change-id>/frontend",
+  "taskBreakdownPath": "tasks/task-breakdown.md",
+  "taskOptimizationInputsPath": "evidence/task-optimization-inputs.json",
+  "stagesEntered": ["Task Breakdown", "Implementation", "Review", "Verification", "Handoff"],
+  "createsSubmodule": true,
+  "packageStatus": "missing",
+  "scaffoldRequired": true,
+  "recommendedScaffoldStage": "Implementation init",
+  "tools": {
+    "contextPack": { "required": false, "requirementCondition": "existing-package-only", "status": "not-required", "executionStage": "Task Breakdown", "command": null, "resultPath": null, "resultStatus": null, "completedAt": null, "consumedBy": null, "consumedAt": null, "reason": "target package is missing; context pack requires an existing real package" },
+    "submoduleScaffold": { "required": false, "requirementCondition": "implementation-init-only", "status": "not-required", "executionStage": "Implementation", "command": null, "resultPath": "evidence/generated/<module>-scaffold/scaffold-manifest.json", "resultStatus": null, "completedAt": null, "consumedBy": null, "consumedAt": null, "reason": "Task Breakdown only plans the explicit Implementation init task" },
+    "staticGateBundle": { "required": true, "status": "not-executed", "executionStage": "Implementation", "command": null, "resultPath": "verification/static-gate-result.json", "resultStatus": null, "completedAt": null },
+    "finalVerificationAggregation": { "required": true, "status": "not-executed", "executionStage": "Verification", "command": null, "resultPath": "verification/verification-result.json", "resultStatus": null, "completedAt": null },
+    "shortCloseoutRenderer": { "required": true, "status": "not-executed", "executionStage": "Handoff", "command": null, "resultPath": "handoff/frontend-handoff.md", "resultStatus": null, "completedAt": null }
+  }
+}

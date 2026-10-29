@@ -1,0 +1,12 @@
+{
+  "name": "ruff-mcp",
+  "version": "1.0.0",
+  "description": "Ruff MCP Server for adversarial review skill",
+  "type": "module",
+  "bin": {
+    "ruff-mcp": "./server.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0"
+  }
+}

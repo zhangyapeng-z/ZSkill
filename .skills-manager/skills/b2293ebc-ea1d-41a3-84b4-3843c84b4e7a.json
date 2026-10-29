@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "skill_id": "b2293ebc-ea1d-41a3-84b4-3843c84b4e7a",
+  "path": "canvas-2",
+  "path_key": "canvas-2",
+  "enabled": true,
+  "tags": [],
+  "source": {
+    "type": "import",
+    "ref": null,
+    "subpath": null,
+    "branch": null
+  }
+}

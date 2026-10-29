@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "skill_id": "60074380-9976-41a2-ad84-6d3a31e67e7c",
+  "path": "text-to-cad-sdf-2",
+  "path_key": "text-to-cad-sdf-2",
+  "enabled": true,
+  "tags": [],
+  "source": {
+    "type": "import",
+    "ref": null,
+    "subpath": null,
+    "branch": null
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "slug": "obsidian",
+  "name": "Obsidian",
+  "version": "1.0.0",
+  "installedAt": 1787062870739,
+  "source": "skillhub",
+  "iconSource": "https://cloudcache.tencent-cloud.com/qcloud/ui/static/other_external_resource/60484da4-21ca-4044-b2ff-2b3a1ddcd63f.png",
+  "iconLocalPath": "C:\\Users\\PC\\.workbuddy\\skills\\obsidian__skillhub\\_icon.png",
+  "iconDownloadedFrom": "https://cloudcache.tencent-cloud.com/qcloud/ui/static/other_external_resource/60484da4-21ca-4044-b2ff-2b3a1ddcd63f.png",
+  "installedContentHash": "sha256:ecde6c2b47bfd6f7eeb1ee85d0c49d0f9a042a0babbad9a8379db1ceb372a4f0"
+}

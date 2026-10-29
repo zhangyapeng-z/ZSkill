@@ -1,0 +1,28 @@
+id: java-serviceimpl-method-missing-comment
+language: Java
+severity: warning
+message: Non-override method should have a nearby comment.
+files:
+  - '**/impl/*.java'
+rule:
+  all:
+    - kind: method_declaration
+    - not:
+        has:
+          stopBy: end
+          any:
+            - kind: marker_annotation
+              regex: '^@Override\b'
+            - kind: annotation
+              regex: '^@Override\b'
+    - not:
+        follows:
+          stopBy:
+            any:
+              - kind: method_declaration
+              - kind: constructor_declaration
+              - kind: class_declaration
+              - kind: field_declaration
+          any:
+            - kind: line_comment
+            - kind: block_comment

@@ -1,0 +1,18 @@
+id: java-controller-extra-top-level-class
+language: Java
+severity: error
+message: Controller file should not declare extra top-level classes.
+rule:
+  all:
+    - kind: class_declaration
+    - has:
+        field: name
+        kind: identifier
+        regex: '.*Controller$'
+    - any:
+        - follows:
+            kind: class_declaration
+            stopBy: end
+        - precedes:
+            kind: class_declaration
+            stopBy: end

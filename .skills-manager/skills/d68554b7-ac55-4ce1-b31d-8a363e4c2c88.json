@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "skill_id": "d68554b7-ac55-4ce1-b31d-8a363e4c2c88",
+  "path": "front-hzero-figma-to-enterprise-2",
+  "path_key": "front-hzero-figma-to-enterprise-2",
+  "enabled": true,
+  "tags": [],
+  "source": {
+    "type": "import",
+    "ref": null,
+    "subpath": null,
+    "branch": null
+  }
+}

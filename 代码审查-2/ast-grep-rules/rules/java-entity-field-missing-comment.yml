@@ -1,0 +1,39 @@
+id: java-entity-field-missing-comment
+language: Java
+severity: warning
+message: Entity field should have a nearby comment.
+files:
+  - '**/entity/*.java'
+rule:
+  all:
+    - kind: field_declaration
+    - inside:
+        kind: class_declaration
+        stopBy: end
+        has:
+          stopBy: end
+          kind: annotation
+          regex: '^@Table\b'
+    - has:
+        stopBy: end
+        any:
+          - kind: marker_annotation
+            regex: '^@(?:Column|Id|Transient)\b'
+          - kind: annotation
+            regex: '^@(?:Column|Id|Transient)\b'
+    - regex: 'private'
+    - not:
+        regex: '\bserialVersionUID\b'
+    - not:
+        regex: '\bstatic\b\s+\bfinal\b'
+    - not:
+        follows:
+          stopBy:
+            any:
+              - kind: field_declaration
+              - kind: method_declaration
+              - kind: constructor_declaration
+              - kind: class_declaration
+          any:
+            - kind: line_comment
+            - kind: block_comment

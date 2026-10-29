@@ -1,0 +1,69 @@
+// HZEROJS Umi submodule config/router.ts template for current-tab list/create/view/edit pages.
+//
+// Use when:
+// - routeOpenMode=menu-current, or
+// - detailViewInteractionMap=current-tab-page, or
+// - user selected "当前页打开详情" / "复用当前菜单页签".
+//
+// Placeholder replacement guide:
+// - __FEATURE_ROUTE_PREFIX__: confirmed full feature route prefix without leading slash. Example: prm/requisitions.
+// - __LIST_TITLE__: Chinese temporary route title for list. Example: 采购申请管理.
+// - __CREATE_TITLE__: Chinese temporary route title for create. Example: 采购申请新建.
+// - __DETAIL_TITLE__: Chinese temporary route title for view/detail. Example: 采购申请详情.
+// - __EDIT_TITLE__: Chinese temporary route title for edit. Example: 采购申请编辑.
+// - __LIST_COMPONENT_PATH__: src/pages Umi pages-root list component path. Examples: PrmRequisition/List, ./PrmRequisition/List, @/pages/PrmRequisition/List.
+// - __DETAIL_COMPONENT_PATH__: src/pages Umi pages-root detail component path. Examples: PrmRequisition/Detail, ./PrmRequisition/Detail, @/pages/PrmRequisition/Detail.
+// - __DETAIL_ID_PARAM__: route param name for record identity. Example: id / requisitionId.
+//
+// Rules:
+// - Parent route is the stable HZERO tab boundary and must not have component.
+// - Do not emit exact by default; add exact only when project evidence requires it and runtime route check verifies child matching.
+// - Detail identity must come from path params, not only query/state.
+// - Do not generate sibling top-level list/detail routes for current-tab.
+// - Never use ../src/pages/... from config/router.ts, and never use ./routes/... for src/routes pages.
+// - Navigate with openTab({ key: '/__FEATURE_ROUTE_PREFIX__', path: detailPath })
+//   or the project-confirmed equivalent wrapper so the parent tab is reused.
+// - Create/view/edit page identity must come from path params, not query/search:
+//   /create, /detail/view/:id, /detail/edit/:id.
+// - The list child route uses an explicit /list path. Do not give the parent route and list child
+//   the same path; HZERO route merging can route the content area to 404.
+// - If the menu must keep '/__FEATURE_ROUTE_PREFIX__', configure menu/openTab/navigation
+//   to open '/__FEATURE_ROUTE_PREFIX__/list'. Do not add route redirect entries.
+const routes = [
+  {
+    path: '/__FEATURE_ROUTE_PREFIX__',
+    authorized: true,
+    title: '__LIST_TITLE__',
+    routes: [
+      {
+        path: '/__FEATURE_ROUTE_PREFIX__/list',
+        component: '__LIST_COMPONENT_PATH__',
+        authorized: true,
+        title: '__LIST_TITLE__',
+      },
+      {
+        path: '/__FEATURE_ROUTE_PREFIX__/create',
+        component: '__DETAIL_COMPONENT_PATH__',
+        authorized: true,
+        title: '__CREATE_TITLE__',
+        mode: 'route',
+      },
+      {
+        path: '/__FEATURE_ROUTE_PREFIX__/detail/view/:__DETAIL_ID_PARAM__',
+        component: '__DETAIL_COMPONENT_PATH__',
+        authorized: true,
+        title: '__DETAIL_TITLE__',
+        mode: 'route',
+      },
+      {
+        path: '/__FEATURE_ROUTE_PREFIX__/detail/edit/:__DETAIL_ID_PARAM__',
+        component: '__DETAIL_COMPONENT_PATH__',
+        authorized: true,
+        title: '__EDIT_TITLE__',
+        mode: 'route',
+      },
+    ],
+  },
+];
+
+export default routes;

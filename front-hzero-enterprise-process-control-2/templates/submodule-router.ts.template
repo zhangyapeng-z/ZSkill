@@ -1,0 +1,45 @@
+// Placeholder replacement guide:
+// - __FEATURE_ROUTE_PREFIX__: confirmed full feature route prefix, without leading slash. Example: prm/requisition.
+// - __ROUTE_TITLE__: route title shown in HZERO route metadata. Example: 采购申请 / 薪资补贴标准.
+// - __COMPONENT_PATH__: project-confirmed route component path.
+//   * Default for newly generated submodules: put pages under src/pages and use a Umi pages-root component path. Examples: Requisition/List, ./Requisition/List, @/pages/Requisition/List.
+//   * Only use src/routes for modifying an existing src/routes page when Target Placement records pageRoot=src/routes and pageRootSource=existing-file/project-evidence/adjacent-module; then use the project alias path. Example: '@/routes/PrmRequisition/List'.
+//   * Never use '../src/pages/PrmRequisition/List' from config/router.ts; route component paths are Umi page references, not filesystem-relative paths from config.
+//   * Never use './routes/PrmRequisition/List' for src/routes pages; Umi will resolve it as src/pages/routes/PrmRequisition/List and build will fail.
+//
+// Example after replacement:
+// path: '/prm/requisition'
+// component: 'Requisition/List'
+// This usually maps to packages/<module>/src/pages/Requisition/List/index.tsx.
+//
+// Exception example when project evidence requires src/routes:
+// path: '/prm/requisition'
+// component: '@/routes/PrmRequisition/List'
+// This maps to packages/<module>/src/routes/PrmRequisition/List/index.tsx.
+//
+// Notes:
+// - Do not leave any __PLACEHOLDER__ in runnable implementation.
+// - This base template is for a list-only or single child page route.
+// - If the feature has list + detail/create/edit pages, especially when routeOpenMode=menu-current
+//   or detailViewInteractionMap=current-tab-page, use submodule-router-current-tab.ts.template instead.
+// - Default generated page root is src/pages. Require existing-file/project evidence before using src/routes;
+//   src/pages and src/routes need different component strings.
+// - In split-routes-dir mode, component paths usually follow the project pattern '@/pages/<Feature>/<Page>';
+//   this template is for single-router-ts mode.
+const routes = [
+  {
+    path: '/__FEATURE_ROUTE_PREFIX__',
+    authorized: true,
+    title: '__ROUTE_TITLE__',
+    routes: [
+      {
+        path: 'list',
+        component: '__COMPONENT_PATH__',
+        authorized: true,
+        title: '__ROUTE_TITLE__',
+      },
+    ],
+  },
+];
+
+export default routes;

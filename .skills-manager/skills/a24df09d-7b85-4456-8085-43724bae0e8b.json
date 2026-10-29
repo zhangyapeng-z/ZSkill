@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "skill_id": "a24df09d-7b85-4456-8085-43724bae0e8b",
+  "path": "代码审查-2",
+  "path_key": "代码审查-2",
+  "enabled": true,
+  "tags": [],
+  "source": {
+    "type": "import",
+    "ref": null,
+    "subpath": null,
+    "branch": null
+  }
+}

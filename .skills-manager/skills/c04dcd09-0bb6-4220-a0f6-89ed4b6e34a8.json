@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "skill_id": "c04dcd09-0bb6-4220-a0f6-89ed4b6e34a8",
+  "path": "front-hzero-attachment-2",
+  "path_key": "front-hzero-attachment-2",
+  "enabled": true,
+  "tags": [],
+  "source": {
+    "type": "import",
+    "ref": null,
+    "subpath": null,
+    "branch": null
+  }
+}

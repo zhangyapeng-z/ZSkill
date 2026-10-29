@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "skill_id": "4b62c7be-a59b-421d-83b0-0e28cf8ecd13",
+  "path": "front-hzero-micro-2",
+  "path_key": "front-hzero-micro-2",
+  "enabled": true,
+  "tags": [],
+  "source": {
+    "type": "import",
+    "ref": null,
+    "subpath": null,
+    "branch": null
+  }
+}

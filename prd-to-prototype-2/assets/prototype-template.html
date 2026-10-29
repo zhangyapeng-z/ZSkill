@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<!--
+  原型HTML骨架模板 v2.0 | 精简版 | 2026-08-11
+  所属Skill: prd-to-prototype v1.0.0
+  规范: 纯内联CSS/JS，禁止外部CDN | 浅色背景·简约清爽科技风
+  使用: 复制本文件→重命名→按PRD Page Map添加页面→实现交互
+  同步: references/prototype-guide.md §四(设计令牌) + references/component-library.md
+-->
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{项目名} - 产品原型</title>
+<style>
+  /* ===== 设计令牌系统（浅色·简约清爽科技风·全局强制）===== */
+  :root {
+    --bg-page: #F8FAFC; --bg-section: #F1F5F9; --bg-card: #FFFFFF; --bg-hover: #F0F7FF;
+    --text-primary: #1A1A1A; --text-secondary: #555555; --text-tertiary: #8A8A8A; --text-on-primary: #FFFFFF;
+    --color-primary: #2563EB; --color-primary-hover: #1D4ED8; --color-primary-light: #EFF6FF;
+    --color-accent: #0891B2; --color-success: #059669; --color-warning: #F59E0B; --color-danger: #EF4444;
+    --shadow-xs: 0 1px 2px rgba(15,23,42,0.04);
+    --shadow-sm: 0 2px 4px rgba(15,23,42,0.05), 0 1px 2px rgba(15,23,42,0.03);
+    --shadow-md: 0 4px 12px rgba(15,23,42,0.06), 0 1px 3px rgba(15,23,42,0.04);
+    --shadow-lg: 0 12px 24px rgba(15,23,42,0.08), 0 4px 8px rgba(15,23,42,0.04);
+    --radius-sm: 6px; --radius: 10px; --radius-lg: 14px;
+    --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px; --space-6: 24px; --space-8: 32px;
+    --transition: 0.25s cubic-bezier(0.4,0,0.2,1);
+    --font-family: -apple-system,"Microsoft YaHei","PingFang SC","Segoe UI",sans-serif;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html,body { font-family:var(--font-family); background:var(--bg-page); color:var(--text-primary); -webkit-font-smoothing:antialiased; scroll-behavior:smooth; }
+  button { border:none; cursor:pointer; font-family:inherit; }
+  a { text-decoration:none; color:inherit; }
+
+  /* ===== 画布（移动端默认375px，按需切换）===== */
+  .device-mobile { width:375px; min-height:100vh; margin:0 auto; background:var(--bg-card); position:relative; box-shadow:var(--shadow-md); overflow-x:hidden; }
+  .device-pc { width:100%; min-height:100vh; background:var(--bg-page); }
+  .device-pc .pc-header { height:56px; background:var(--bg-card); border-bottom:1px solid #E5E7EB; display:flex; align-items:center; padding:0 32px; box-shadow:var(--shadow-xs); }
+  .device-pc .pc-container { max-width:1200px; margin:0 auto; padding:24px 32px; }
+  .device-admin { width:100%; min-height:100vh; background:var(--bg-page); display:flex; }
+  .device-admin .admin-sidebar { width:200px; background:var(--bg-card); min-height:100vh; border-right:1px solid #E5E7EB; box-shadow:1px 0 4px rgba(15,23,42,0.03); }
+  .device-admin .admin-main { flex:1; }
+  .device-admin .admin-header { height:56px; background:var(--bg-card); border-bottom:1px solid #E5E7EB; box-shadow:var(--shadow-xs); }
+  .device-admin .admin-content { padding:24px; }
+
+  /* ===== 页面容器（单页多视图切换）===== */
+  .page { display:none; min-height:100vh; padding-bottom:60px; }
+  .page.active { display:block; animation:fadeIn 0.3s ease; }
+  @keyframes fadeIn { from{opacity:0;transform:translateX(10px)} to{opacity:1;transform:translateX(0)} }
+
+  /* ===== 导航栏 ===== */
+  .nav-bar { height:44px; background:var(--bg-card); border-bottom:1px solid #ECEEF1; display:flex; align-items:center; padding:0 12px; position:sticky; top:0; z-index:100; box-shadow:var(--shadow-xs); }
+  .nav-back { font-size:22px; cursor:pointer; color:var(--text-primary); }
+  .nav-title { flex:1; text-align:center; font-size:17px; font-weight:600; }
+  .nav-action { font-size:22px; cursor:pointer; }
+
+  /* ===== TabBar ===== */
+  .tab-bar { position:fixed; bottom:0; left:50%; transform:translateX(-50%); width:375px; height:50px; background:var(--bg-card); border-top:1px solid #ECEEF1; display:flex; z-index:100; }
+  .tab-item { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; font-size:10px; color:var(--text-tertiary); cursor:pointer; transition:color var(--transition); }
+  .tab-item:hover { color:var(--text-secondary); }
+  .tab-item.active { color:var(--color-primary); }
+  .tab-icon { font-size:20px; margin-bottom:2px; }
+
+  /* ===== 按钮 ===== */
+  .btn { height:44px; border-radius:22px; font-size:15px; font-weight:600; display:flex; align-items:center; justify-content:center; transition:all var(--transition); }
+  .btn:active { transform:scale(0.97); }
+  .btn-primary { background:var(--color-primary); color:#fff; box-shadow:0 1px 3px rgba(37,99,235,0.2); }
+  .btn-primary:hover { background:var(--color-primary-hover); box-shadow:0 4px 10px rgba(37,99,235,0.3); transform:translateY(-1px); }
+  .btn-secondary { background:var(--bg-card); color:var(--color-primary); border:1px solid var(--color-primary); }
+  .btn-secondary:hover { background:var(--color-primary-light); }
+  .btn-danger { background:var(--color-danger); color:#fff; }
+  .btn-disabled { background:#E0E0E0; color:var(--text-tertiary); cursor:not-allowed; }
+  .btn-block { width:100%; }
+  .btn-sm { height:32px; border-radius:16px; font-size:13px; padding:0 16px; }
+
+  /* ===== 卡片 ===== */
+  .card { background:var(--bg-card); border-radius:var(--radius); box-shadow:var(--shadow-sm); margin:12px; padding:14px; transition:all var(--transition); }
+  .card:hover { box-shadow:var(--shadow-md); transform:translateY(-2px); }
+  .card-title { font-size:15px; font-weight:600; margin-bottom:8px; }
+
+  /* ===== 表单 ===== */
+  .form-group { margin-bottom:16px; }
+  .form-group label { display:block; font-size:14px; color:var(--text-secondary); margin-bottom:6px; }
+  .form-input, .form-select, .form-textarea { width:100%; height:44px; padding:0 12px; border:1px solid #E5E7EB; border-radius:var(--radius-sm); font-size:14px; background:var(--bg-card); transition:all var(--transition); }
+  .form-input:focus, .form-select:focus, .form-textarea:focus { outline:none; border-color:var(--color-primary); box-shadow:0 0 0 3px rgba(37,99,235,0.1); }
+
+  /* ===== 标签/徽标 ===== */
+  .tag { display:inline-block; padding:2px 8px; border-radius:4px; font-size:11px; font-weight:500; }
+  .tag-primary { background:var(--color-primary-light); color:var(--color-primary); }
+  .tag-success { background:#D1FAE5; color:var(--color-success); }
+  .tag-warning { background:#FEF3C7; color:#92400E; }
+  .tag-danger { background:#FEE2E2; color:var(--color-danger); }
+
+  /* ===== 弹窗 ===== */
+  .modal-overlay { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:999; display:none; }
+  .modal-overlay.show { display:flex; align-items:center; justify-content:center; }
+  .modal { background:var(--bg-card); border-radius:var(--radius-lg); width:90%; max-width:320px; padding:20px; box-shadow:var(--shadow-lg); animation:modalIn 0.3s ease; }
+  @keyframes modalIn { from{opacity:0;transform:scale(0.9)} to{opacity:1;transform:scale(1)} }
+  .modal-title { font-size:17px; font-weight:600; margin-bottom:12px; text-align:center; }
+  .modal-body { font-size:14px; color:var(--text-secondary); margin-bottom:20px; }
+  .modal-footer { display:flex; gap:12px; }
+
+  /* ===== Toast提示 ===== */
+  .toast { position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:rgba(0,0,0,0.8); color:#fff; padding:12px 24px; border-radius:8px; font-size:14px; z-index:9999; display:none; }
+  .toast.show { display:block; animation:toastIn 0.3s ease; }
+  @keyframes toastIn { from{opacity:0} to{opacity:1} }
+
+  /* ===== 列表 ===== */
+  .list-item { display:flex; align-items:center; padding:12px; border-bottom:1px solid #ECEEF1; cursor:pointer; transition:background var(--transition); }
+  .list-item:hover { background:var(--bg-hover); }
+  .list-item:last-child { border-bottom:none; }
+
+  /* ===== 空状态 ===== */
+  .state-empty { text-align:center; padding:60px 40px; color:var(--text-tertiary); }
+  .state-empty .empty-icon { font-size:56px; margin-bottom:16px; }
+  .state-empty .empty-text { font-size:15px; margin-bottom:20px; }
+
+  /* ===== 走查脚本 ===== */
+  .walkthrough-btn { position:fixed; top:16px; right:16px; z-index:9999; background:var(--color-primary); color:#fff; padding:8px 16px; border-radius:8px; font-size:13px; box-shadow:0 4px 12px rgba(37,99,235,0.25); transition:all var(--transition); }
+  .walkthrough-btn:hover { background:var(--color-primary-hover); transform:translateY(-2px); }
+  .walkthrough-panel { position:fixed; top:0; right:0; width:560px; max-width:90vw; max-height:100vh; overflow-y:auto; background:var(--bg-card); z-index:9998; box-shadow:-4px 0 24px rgba(0,0,0,0.12); transform:translateX(100%); transition:transform 0.3s; }
+  .walkthrough-panel.show { transform:translateX(0); }
+  .walkthrough-content { padding:24px; }
+  .walkthrough-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; border-bottom:2px solid #E5E7EB; padding-bottom:12px; }
+  .walkthrough-table { width:100%; border-collapse:collapse; font-size:12px; }
+  .walkthrough-table th { background:var(--color-primary); color:#fff; padding:8px; text-align:left; }
+  .walkthrough-table td { padding:8px; border-bottom:1px solid #E5E7EB; }
+  .walkthrough-table tr:hover td { background:#F0F7FF; }
+  .walkthrough-close { cursor:pointer; font-size:20px; color:var(--text-tertiary); }
+
+  /* ===== 状态切换器（演示级）===== */
+  .state-switcher { display:inline-flex; gap:4px; background:var(--bg-section); padding:4px; border-radius:8px; margin-bottom:16px; }
+  .state-btn { padding:4px 12px; border-radius:6px; font-size:12px; background:transparent; color:var(--text-tertiary); transition:all var(--transition); font-weight:500; }
+  .state-btn.active { background:var(--color-primary); color:#fff; box-shadow:0 1px 3px rgba(37,99,235,0.3); }
+  .state-btn:hover:not(.active) { background:#E2E8F0; }
+
+  /* ===== PC端组件 ===== */
+  .pc-sidebar { width:200px; background:var(--bg-card); min-height:100vh; position:fixed; border-right:1px solid #E5E7EB; box-shadow:1px 0 4px rgba(15,23,42,0.03); }
+  .pc-nav-item { display:flex; align-items:center; gap:10px; padding:10px 16px; color:var(--text-tertiary); font-size:13px; cursor:pointer; transition:all var(--transition); border-left:3px solid transparent; }
+  .pc-nav-item:hover { background:var(--bg-section); color:var(--text-primary); }
+  .pc-nav-item.active { background:var(--color-primary-light); color:var(--color-primary); border-left-color:var(--color-primary); font-weight:600; }
+  .data-table { width:100%; border-collapse:collapse; font-size:13px; }
+  .data-table th { background:var(--bg-section); padding:10px; text-align:left; font-weight:600; color:var(--text-secondary); border-bottom:2px solid #E5E7EB; }
+  .data-table td { padding:10px; border-bottom:1px solid #ECEEF1; }
+  .data-table tr:hover td { background:var(--bg-hover); }
+  .breadcrumb { font-size:13px; color:var(--text-tertiary); display:flex; align-items:center; gap:6px; margin-bottom:16px; }
+</style>
+</head>
+<body>
+
+<!-- 走查脚本浮动按钮 -->
+<button class="walkthrough-btn" onclick="toggleWalkthrough()">🎬 走查脚本</button>
+
+<!-- 走查脚本面板（默认折叠，替换为实际走查步骤） -->
+<div class="walkthrough-panel" id="walkthrough" style="display:none;">
+  <div class="walkthrough-content">
+    <div class="walkthrough-header">
+      <h3>🎬 原型走查脚本</h3>
+      <span class="walkthrough-close" onclick="toggleWalkthrough()">✕</span>
+    </div>
+    <p class="walkthrough-meta">按步骤走查核心流程</p>
+    <table class="walkthrough-table">
+      <thead><tr><th>步骤</th><th>页面</th><th>操作</th><th>预期效果</th><th>验证功能</th></tr></thead>
+      <tbody id="walkthrough-steps">
+        <!-- 替换为实际走查步骤 -->
+        <tr><td>1</td><td>P01</td><td>示例操作</td><td>示例效果</td><td>F01</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ===== 移动端画布（默认·按需切换为PC端画布）===== -->
+<div class="device-mobile">
+
+  <!-- ========== P01 首页（示例·替换为实际页面）========== -->
+  <!-- Page: P01 首页 -->
+  <div class="page active" id="page-p01">
+    <div class="nav-bar">
+      <span class="nav-back" onclick="showPage('')">←</span>
+      <span class="nav-title">首页</span>
+      <span class="nav-action">⋯</span>
+    </div>
+    <!-- 默认状态 -->
+    <div class="state-container" data-state="default">
+      <!-- F01: 示例功能 -->
+      <div class="card">
+        <div class="card-title">示例卡片</div>
+        <p style="color:var(--text-secondary);font-size:14px;">替换为实际内容</p>
+        <button class="btn btn-primary btn-block" style="margin-top:12px;" onclick="toast('操作成功')">示例按钮</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== P02 示例页面（复制此结构添加更多页面）========== -->
+  <!-- Page: P02 页面名 -->
+  <div class="page" id="page-p02">
+    <div class="nav-bar">
+      <span class="nav-back" onclick="showPage('page-p01')">←</span>
+      <span class="nav-title">页面名称</span>
+    </div>
+    <div class="card">
+      <div class="card-title">页面内容</div>
+      <p style="color:var(--text-secondary);">按PRD功能清单实现交互</p>
+    </div>
+  </div>
+
+  <!-- TabBar（移动端） -->
+  <div class="tab-bar">
+    <div class="tab-item active" onclick="showPage('page-p01')"><span class="tab-icon">🏠</span>首页</div>
+    <div class="tab-item" onclick="showPage('page-p02')"><span class="tab-icon">📋</span>列表</div>
+    <div class="tab-item"><span class="tab-icon">👤</span>我的</div>
+  </div>
+
+</div>
+
+<!-- ===== PC端画布（如需PC原型，取消注释使用，移除上方移动端画布）===== -->
+<!--
+<div class="device-pc">
+  <div class="pc-header">页面标题</div>
+  <div class="pc-container">PC端内容</div>
+</div>
+
+<div class="device-admin">
+  <div class="pc-sidebar">
+    <div style="padding:20px 16px;font-weight:700;border-bottom:1px solid #E5E7EB;">系统名称</div>
+    <div class="pc-nav-item active">📊 首页</div>
+    <div class="pc-nav-item">📋 数据管理</div>
+  </div>
+  <div class="admin-main">
+    <div class="admin-header" style="display:flex;align-items:center;padding:0 24px;">面包屑导航</div>
+    <div class="admin-content">
+      <div class="card">
+        <table class="data-table">
+          <thead><tr><th>列1</th><th>列2</th><th>状态</th></tr></thead>
+          <tbody><tr><td>数据1</td><td>数据2</td><td><span class="tag tag-success">✅ 正常</span></td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+-->
+
+<!-- ===== 弹窗容器 ===== -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModal()">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-title" id="modal-title">弹窗标题</div>
+    <div class="modal-body" id="modal-body">弹窗内容</div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary btn-block" onclick="closeModal()">取消</button>
+      <button class="btn btn-primary btn-block" onclick="closeModal();toast('操作成功')">确认</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Toast提示 ===== -->
+<div class="toast" id="toast"></div>
+
+<script>
+  /* ===== 基础函数（所有场景必读）===== */
+
+  // 页面切换
+  function showPage(pageId) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    if (pageId) {
+      const page = document.getElementById(pageId);
+      if (page) page.classList.add('active');
+    }
+  }
+
+  // 弹窗
+  function openModal(title, body) {
+    document.getElementById('modal-title').textContent = title || '提示';
+    document.getElementById('modal-body').textContent = body || '';
+    document.getElementById('modal-overlay').classList.add('show');
+  }
+  function closeModal() {
+    document.getElementById('modal-overlay').classList.remove('show');
+  }
+
+  // Toast提示
+  function toast(msg) {
+    var t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(function() { t.classList.remove('show'); }, 2000);
+  }
+
+  // 走查脚本面板切换
+  function toggleWalkthrough() {
+    var w = document.getElementById('walkthrough');
+    w.style.display = w.style.display === 'none' ? 'block' : 'none';
+  }
+
+  // 状态切换器（演示级）
+  function switchState(containerId, state) {
+    var container = document.getElementById(containerId);
+    if (container) container.setAttribute('data-state', state);
+  }
+</script>
+</body>
+</html>

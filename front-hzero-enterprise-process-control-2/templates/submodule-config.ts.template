@@ -1,0 +1,15 @@
+import { extendParentConfig } from '@hzerojs/plugin-micro';
+import routes from './routes';
+
+// Replace __ROUTE_PREFIX__ with the confirmed route prefix before runnable implementation.
+// Do not use catch-all patterns such as \/.* or .* for new submodules.
+export default extendParentConfig({
+  webpack5: {},
+  routes: [...routes],
+  hash: true,
+  hzeroMicro: {
+    microConfig: {
+      registerRegex: '^\\/__ROUTE_PREFIX__(?:\\/.*)?$',
+    },
+  },
+});

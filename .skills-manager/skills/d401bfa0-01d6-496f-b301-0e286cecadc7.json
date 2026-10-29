@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "skill_id": "d401bfa0-01d6-496f-b301-0e286cecadc7",
+  "path": "front-hzero-enterprise-design-2",
+  "path_key": "front-hzero-enterprise-design-2",
+  "enabled": true,
+  "tags": [],
+  "source": {
+    "type": "import",
+    "ref": null,
+    "subpath": null,
+    "branch": null
+  }
+}

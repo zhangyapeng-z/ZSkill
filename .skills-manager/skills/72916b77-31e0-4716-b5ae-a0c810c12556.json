@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "skill_id": "72916b77-31e0-4716-b5ae-a0c810c12556",
+  "path": "deepseek-websearch-2",
+  "path_key": "deepseek-websearch-2",
+  "enabled": true,
+  "tags": [],
+  "source": {
+    "type": "import",
+    "ref": null,
+    "subpath": null,
+    "branch": null
+  }
+}

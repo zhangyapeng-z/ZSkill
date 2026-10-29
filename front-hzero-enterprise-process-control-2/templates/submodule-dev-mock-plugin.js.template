@@ -1,0 +1,35 @@
+const __MODULE_CAMEL__DevMockMiddleware = require('./__MODULE_KEY__-dev-mock');
+
+const MOCK_MOUNT = '/_mock/__MODULE_KEY__/';
+const PLUGIN_FLAG = '__HZERO___MODULE_CAMEL___DEV_MOCK_PLUGIN_REGISTERED__';
+
+function assertDevMockMiddleware(middleware) {
+  if (typeof middleware !== 'function') {
+    throw new Error('[__MODULE_KEY__-dev-mock] mock/__MODULE_KEY__-dev-mock.js must export a middleware function.');
+  }
+  if (middleware.__mockMount !== MOCK_MOUNT) {
+    throw new Error(
+      `[__MODULE_KEY__-dev-mock] middleware mount mismatch: expected ${MOCK_MOUNT}, got ${middleware.__mockMount}.`
+    );
+  }
+}
+
+module.exports = function __MODULE_CAMEL__DevMockPlugin(api) {
+  assertDevMockMiddleware(__MODULE_CAMEL__DevMockMiddleware);
+
+  if (global[PLUGIN_FLAG]) {
+    console.warn('[__MODULE_KEY__-dev-mock] dev mock plugin was registered more than once in this process; skipped duplicate registration.');
+    return;
+  }
+  global[PLUGIN_FLAG] = true;
+
+  if (api && typeof api.addBeforeMiddlewares === 'function') {
+    api.addBeforeMiddlewares(() => {
+      console.info(`[__MODULE_KEY__-dev-mock] middleware registered at ${MOCK_MOUNT}`);
+      return [__MODULE_CAMEL__DevMockMiddleware];
+    });
+    return;
+  }
+
+  throw new Error('[__MODULE_KEY__-dev-mock] Umi mock middleware extension point is unavailable.');
+};

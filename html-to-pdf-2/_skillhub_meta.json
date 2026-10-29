@@ -1,0 +1,19 @@
+{
+  "slug": "html-to-pdf-pro",
+  "name": "HTML转PDF（通用版）",
+  "version": "1.0.0",
+  "installedAt": 1788413042266,
+  "source": "skillhub",
+  "namespace": "user_e60b9cd9",
+  "canonicalName": "@user_e60b9cd9/html-to-pdf-pro",
+  "iconSource": "https://cloudcache.tencent-cloud.com/qcloud/ui/static/other_external_resource/7920727c-4e7d-496a-9223-d9c6673e9e53.png",
+  "labels": {
+    "requires_api_key": "false"
+  },
+  "description_zh": "将 HTML 文件转换为高质量 PDF。支持中文、CSS 样式保留、A4 页面设置。适用于报告、文档、发票等需要打印或分享的场景。当需要将 HTML 转换为 PDF 时使用此技能。",
+  "description_en": "将 HTML 文件转换为高质量 PDF。支持中文、CSS 样式保留、A4 页面设置。适用于报告、文档、发票等需要打印或分享的场景。当需要将 HTML 转换为 PDF 时使用此技能。",
+  "installs": 791,
+  "iconLocalPath": "C:\\Users\\PC\\.workbuddy\\skills\\html-to-pdf-pro__skillhub\\_icon.png",
+  "iconDownloadedFrom": "https://cloudcache.tencent-cloud.com/qcloud/ui/static/other_external_resource/7920727c-4e7d-496a-9223-d9c6673e9e53.png",
+  "installedContentHash": "sha256:15bef32ded739666f284e2c1bbc94b7d1a03474ba137109edf32bb249b3bf179"
+}

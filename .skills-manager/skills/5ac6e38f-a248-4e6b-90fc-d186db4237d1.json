@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "skill_id": "5ac6e38f-a248-4e6b-90fc-d186db4237d1",
+  "path": "front-hzero-choerodon-ui-2",
+  "path_key": "front-hzero-choerodon-ui-2",
+  "enabled": true,
+  "tags": [],
+  "source": {
+    "type": "import",
+    "ref": null,
+    "subpath": null,
+    "branch": null
+  }
+}

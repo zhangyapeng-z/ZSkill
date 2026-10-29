@@ -1,0 +1,19 @@
+id: java-controller-depend-mapper
+language: Java
+severity: error
+message: Controller should not depend on Mapper directly.
+rule:
+  all:
+    - kind: class_declaration
+    - has:
+        field: name
+        kind: identifier
+        regex: '.*Controller$'
+    - has:
+        field: body
+        stopBy: end
+        kind: field_declaration
+        has:
+          field: type
+          kind: type_identifier
+          regex: '.*Mapper$'

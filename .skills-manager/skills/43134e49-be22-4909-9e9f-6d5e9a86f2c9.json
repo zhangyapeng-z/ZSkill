@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "skill_id": "43134e49-be22-4909-9e9f-6d5e9a86f2c9",
+  "path": "front-hzero-import-export-2",
+  "path_key": "front-hzero-import-export-2",
+  "enabled": true,
+  "tags": [],
+  "source": {
+    "type": "import",
+    "ref": null,
+    "subpath": null,
+    "branch": null
+  }
+}

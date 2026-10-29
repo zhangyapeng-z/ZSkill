@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "skill_id": "c246dd34-3d2a-4ee4-bd54-0667c4cfd06f",
+  "path": "agent-team-orchestration-2",
+  "path_key": "agent-team-orchestration-2",
+  "enabled": true,
+  "tags": [],
+  "source": {
+    "type": "import",
+    "ref": null,
+    "subpath": null,
+    "branch": null
+  }
+}

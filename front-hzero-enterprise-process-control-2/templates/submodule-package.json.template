@@ -1,0 +1,25 @@
+{
+  "name": "__PACKAGE_NAME__",
+  "version": "1.0.0",
+  "license": "MIT",
+  "scripts": {
+    "start": "cross-env UMI_ENV=dev node ../../node_modules/umi/bin/umi.js dev",
+    "build": "cross-env UMI_ENV=dev node ../../node_modules/umi/bin/umi.js hzero-build",
+    "build:ms": "cross-env BUILD_SINGLE_PUBLIC_MS=true node ../../node_modules/umi/bin/umi.js hzero-build",
+    "transpile": "node ../../node_modules/umi/bin/umi.js hzero-transpile",
+    "build:app": "cross-env BUILD_SINGLE_PUBLIC_MS=true node ../../node_modules/umi/bin/umi.js hzero-build --only-build-parent",
+    "prettier": "prettier --write '**/*.{js,jsx,tsx,ts,less,md,json}'",
+    "test": "umi-test",
+    "test:coverage": "umi-test --coverage"
+  },
+  "files": [
+    "lib",
+    "config/config.ts",
+    "!lib/config/alias.js",
+    "!lib/config/babel-config.js",
+    "!.umi",
+    "!lib/config/.env.*",
+    "!lib/config/theme.js",
+    "!.umi-production"
+  ]
+}

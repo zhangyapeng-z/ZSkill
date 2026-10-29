@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "skill_id": "fe29095d-8a1a-4e19-b097-f4ee79b675ec",
+  "path": "front-hzero-runtime-config-2",
+  "path_key": "front-hzero-runtime-config-2",
+  "enabled": true,
+  "tags": [],
+  "source": {
+    "type": "import",
+    "ref": null,
+    "subpath": null,
+    "branch": null
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "skill_id": "1aecb9e5-9392-4093-be12-4924032fd404",
+  "path": "front-hzero-permission-button-2",
+  "path_key": "front-hzero-permission-button-2",
+  "enabled": true,
+  "tags": [],
+  "source": {
+    "type": "import",
+    "ref": null,
+    "subpath": null,
+    "branch": null
+  }
+}

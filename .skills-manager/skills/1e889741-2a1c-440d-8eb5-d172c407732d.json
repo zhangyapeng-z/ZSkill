@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "skill_id": "1e889741-2a1c-440d-8eb5-d172c407732d",
+  "path": "text-to-cad-dxf-2",
+  "path_key": "text-to-cad-dxf-2",
+  "enabled": true,
+  "tags": [],
+  "source": {
+    "type": "import",
+    "ref": null,
+    "subpath": null,
+    "branch": null
+  }
+}

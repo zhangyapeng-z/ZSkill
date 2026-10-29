@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "skill_id": "e4673cd2-f08e-43c8-a837-41a7f6495eb5",
+  "path": "html-data-report",
+  "path_key": "html-data-report",
+  "enabled": true,
+  "tags": [],
+  "source": {
+    "type": "import",
+    "ref": null,
+    "subpath": null,
+    "branch": null
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "skill_id": "d7b840df-8f6f-4e7f-9f0f-8b8a21f8197b",
+  "path": "front-hzero-enterprise-process-control-2",
+  "path_key": "front-hzero-enterprise-process-control-2",
+  "enabled": true,
+  "tags": [],
+  "source": {
+    "type": "import",
+    "ref": null,
+    "subpath": null,
+    "branch": null
+  }
+}

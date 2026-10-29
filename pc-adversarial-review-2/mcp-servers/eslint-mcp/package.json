@@ -1,0 +1,13 @@
+{
+  "name": "eslint-mcp",
+  "version": "1.0.0",
+  "description": "ESLint MCP Server for adversarial review skill",
+  "type": "module",
+  "bin": {
+    "eslint-mcp": "./server.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "eslint": "^9.0.0"
+  }
+}

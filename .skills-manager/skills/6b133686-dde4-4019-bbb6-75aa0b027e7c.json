@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "skill_id": "6b133686-dde4-4019-bbb6-75aa0b027e7c",
+  "path": "feishu-weekly-report-2",
+  "path_key": "feishu-weekly-report-2",
+  "enabled": true,
+  "tags": [],
+  "source": {
+    "type": "import",
+    "ref": null,
+    "subpath": null,
+    "branch": null
+  }
+}

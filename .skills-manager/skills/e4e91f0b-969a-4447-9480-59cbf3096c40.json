@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "skill_id": "e4e91f0b-969a-4447-9480-59cbf3096c40",
+  "path": "skill-discovery-index",
+  "path_key": "skill-discovery-index",
+  "enabled": true,
+  "tags": [],
+  "source": {
+    "type": "import",
+    "ref": null,
+    "subpath": null,
+    "branch": null
+  }
+}

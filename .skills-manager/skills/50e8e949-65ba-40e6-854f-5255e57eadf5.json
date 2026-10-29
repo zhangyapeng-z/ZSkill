@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "skill_id": "50e8e949-65ba-40e6-854f-5255e57eadf5",
+  "path": "diagram-builder-2",
+  "path_key": "diagram-builder-2",
+  "enabled": true,
+  "tags": [],
+  "source": {
+    "type": "import",
+    "ref": null,
+    "subpath": null,
+    "branch": null
+  }
+}

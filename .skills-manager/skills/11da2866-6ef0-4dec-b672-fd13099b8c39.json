@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "skill_id": "11da2866-6ef0-4dec-b672-fd13099b8c39",
+  "path": "html-to-hzero-demo-2",
+  "path_key": "html-to-hzero-demo-2",
+  "enabled": true,
+  "tags": [],
+  "source": {
+    "type": "import",
+    "ref": null,
+    "subpath": null,
+    "branch": null
+  }
+}

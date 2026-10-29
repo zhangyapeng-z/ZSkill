@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "skill_id": "a7451384-e82d-46ed-bfd7-47f72997ed33",
+  "path": "onboard",
+  "path_key": "onboard",
+  "enabled": true,
+  "tags": [],
+  "source": {
+    "type": "import",
+    "ref": null,
+    "subpath": null,
+    "branch": null
+  }
+}

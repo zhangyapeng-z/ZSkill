@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>架构与代码质量检查报告 — 模板</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background: #f5f7fa; color: #333; line-height: 1.6; }
+.container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+.header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; padding: 30px; border-radius: 12px; margin-bottom: 24px; }
+.header h1 { font-size: 24px; margin-bottom: 8px; }
+.header .meta { font-size: 14px; opacity: 0.9; }
+.stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+.stat-card { background: #fff; border-radius: 12px; padding: 24px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+.stat-card .count { font-size: 36px; font-weight: 700; }
+.stat-card .label { font-size: 14px; color: #666; margin-top: 4px; }
+.section { background: #fff; border-radius: 12px; padding: 24px; margin-bottom: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+.section h2 { font-size: 18px; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 2px solid #eee; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { background: #f8f9fa; padding: 10px 12px; text-align: left; font-weight: 600; border-bottom: 2px solid #dee2e6; }
+td { padding: 10px 12px; border-bottom: 1px solid #eee; vertical-align: top; }
+tr:hover { background: #f8f9fa; }
+.badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; color: #fff; }
+.badge-Blocker { background: #dc3545; }
+.badge-Critical { background: #fd7e14; }
+.badge-Major { background: #ffc107; color: #333; }
+.badge-Minor { background: #6c757d; }
+.file-path { font-family: "Consolas", "Monaco", monospace; font-size: 12px; color: #0066cc; max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rule-id { font-family: monospace; font-weight: 600; }
+.priority-section { margin-bottom: 20px; }
+.priority-header { font-size: 16px; font-weight: 700; margin-bottom: 12px; padding: 8px 12px; border-radius: 6px; color: #fff; }
+.priority-P0 { background: #dc3545; }
+.priority-P1 { background: #fd7e14; }
+.priority-P2 { background: #ffc107; color: #333; }
+.priority-P3 { background: #6c757d; }
+.footer { text-align: center; color: #999; font-size: 12px; padding: 20px; }
+</style>
+</head>
+<body>
+<div class="container">
+<!-- 此文件为报告模板，实际报告由 generate_report.py 脚本动态生成 -->
+<!-- 使用方式: python generate_report.py --arch arch-issues.json --code code-issues.json --output ./output -->
+<div class="header">
+  <h1>微服务架构规范与代码质量检查报告</h1>
+  <div class="meta">
+    检查时间: YYYY-MM-DD HH:MM:SS | 工程名称: Example | 模块数量: 10 | 源文件数: 120
+  </div>
+</div>
+<div class="stats-grid">
+  <div class="stat-card"><div class="count" style="color:#dc3545">0</div><div class="label">Blocker</div></div>
+  <div class="stat-card"><div class="count" style="color:#fd7e14">0</div><div class="label">Critical</div></div>
+  <div class="stat-card"><div class="count" style="color:#ffc107">0</div><div class="label">Major</div></div>
+  <div class="stat-card"><div class="count" style="color:#6c757d">0</div><div class="label">Minor</div></div>
+</div>
+<div class="section"><h2>模板说明</h2>
+<p>此文件为报告 HTML 模板参考。实际报告由 <code>scripts/generate_report.py</code> 脚本读取 JSON 结果文件动态生成。</p>
+<p>报告包含以下区域：</p>
+<ul>
+  <li><strong>页头</strong> — 渐变背景，工程信息和检查时间</li>
+  <li><strong>统计卡片</strong> — Blocker/Critical/Major/Minor 四级计数</li>
+  <li><strong>架构检查结果</strong> — 表格列出所有架构问题</li>
+  <li><strong>代码质量检查结果</strong> — 按八大类别分组表格</li>
+  <li><strong>修复优先级计划</strong> — P0-P3 分级列表</li>
+</ul>
+</div>
+<div class="footer">Arch Quality Checker Report Template</div>
+</div>
+</body>
+</html>

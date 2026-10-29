@@ -1,0 +1,19 @@
+{
+  "name": "tdd",
+  "installedAt": 1789296742144,
+  "source": "marketplace",
+  "version": "1.0.0",
+  "skillId": "skill_2057443411905277952",
+  "examples_zh": [
+    "用 TDD 实现这个功能",
+    "帮我写测试，先红后绿",
+    "red-green-refactor 流程开发"
+  ],
+  "examples_en": [
+    "implement this feature using TDD",
+    "red-green-refactor this",
+    "write the test first, then make it pass"
+  ],
+  "iconSource": "letter:auto",
+  "installedContentHash": "sha256:1b2f4b01cfe183c8232d1a1e4ecdc3ec2df7e869e9132e9427d25d8fd90b3394"
+}

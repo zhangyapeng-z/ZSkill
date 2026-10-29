@@ -1,0 +1,12 @@
+# Local overrides (may contain real wiki IDs / tokens)
+*.local.md
+.env
+.env.*
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.idea/
+.vscode/

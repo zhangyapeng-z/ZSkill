@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "skill_id": "4362099d-f5d0-4b9a-af0f-0390723940d0",
+  "path": "text-to-cad-engineering-drawing-2",
+  "path_key": "text-to-cad-engineering-drawing-2",
+  "enabled": true,
+  "tags": [],
+  "source": {
+    "type": "import",
+    "ref": null,
+    "subpath": null,
+    "branch": null
+  }
+}

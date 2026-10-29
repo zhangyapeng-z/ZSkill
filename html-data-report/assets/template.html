@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>鲜果到家 · 会员卡首周销售日报（09-01 ~ 09-07）</title>
+<script>__ECHARTS_INLINE__</script>
+<style>
+  :root{
+    --ink:#0f172a; --muted:#64748b; --line:#e2e8f0; --bg:#f2f5f4; --card:#ffffff;
+    --brand:#0e7a55; --brand-deep:#0a5c41; --accent:#f97316;
+    --m1:#f59e0b; --m2:#14b8a6; --m3:#059669; --indigo:#4f46e5;
+    --up:#16a34a; --down:#dc2626;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Segoe UI",sans-serif;
+    background:var(--bg); color:var(--ink); line-height:1.65; font-size:15px;
+  }
+  .wrap{max-width:1180px;margin:0 auto;padding:28px 22px 60px;}
+  .num{font-variant-numeric:tabular-nums;}
+  /* ---------- hero ---------- */
+  .hero{
+    background:linear-gradient(135deg,var(--brand-deep) 0%,var(--brand) 78%);
+    color:#fff;border-radius:18px;padding:30px 34px 26px;position:relative;overflow:hidden;
+    box-shadow:0 10px 30px rgba(14,122,85,.22);
+  }
+  .hero::after{
+    content:"";position:absolute;right:-70px;top:-90px;width:290px;height:290px;border-radius:50%;
+    background:rgba(255,255,255,.07);
+  }
+  .hero::before{
+    content:"";position:absolute;right:60px;bottom:-120px;width:220px;height:220px;border-radius:50%;
+    background:rgba(255,255,255,.05);
+  }
+  .hero .brand-line{display:flex;align-items:center;gap:10px;font-size:14px;letter-spacing:2px;opacity:.92;}
+  .hero .dot{width:11px;height:11px;border-radius:3px;background:#ffd166;display:inline-block;}
+  .hero h1{font-size:31px;font-weight:800;letter-spacing:1px;margin:8px 0 4px;}
+  .hero .sub{font-size:15px;opacity:.92;}
+  .hero .meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px;position:relative;z-index:1;}
+  .chip{
+    background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);
+    border-radius:999px;padding:3px 13px;font-size:12.5px;letter-spacing:.3px;
+  }
+  .chip b{font-weight:700;}
+  /* ---------- sections ---------- */
+  section{margin-top:30px;}
+  .sec-head{display:flex;align-items:baseline;gap:12px;margin-bottom:14px;}
+  .sec-no{
+    flex:0 0 auto;width:34px;height:34px;border-radius:10px;background:var(--brand);color:#fff;
+    display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px;transform:translateY(4px);
+  }
+  .sec-head h2{font-size:21px;font-weight:800;}
+  .sec-head .note{color:var(--muted);font-size:13px;}
+  .card{background:var(--card);border-radius:16px;padding:22px 24px;box-shadow:0 2px 10px rgba(15,23,42,.05);}
+  /* ---------- tldr ---------- */
+  .tldr{border-left:6px solid var(--brand);}
+  .tldr h3{font-size:17px;font-weight:800;margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+  .tldr h3 .tag{background:var(--brand);color:#fff;font-size:12px;border-radius:6px;padding:2px 9px;font-weight:700;letter-spacing:1px;}
+  .tldr ol{list-style:none;}
+  .tldr li{padding:6px 0 6px 26px;position:relative;border-top:1px dashed #eef2f0;}
+  .tldr li:first-child{border-top:none;}
+  .tldr li::before{content:"";position:absolute;left:6px;top:16px;width:8px;height:8px;border-radius:50%;background:var(--brand);}
+  .tldr b{font-weight:800;}
+  .tldr .warn{background:#fff7ed;border-radius:10px;padding:10px 12px 10px 26px;margin:6px -12px 0;}
+  .tldr .warn::before{background:var(--accent) !important;top:20px !important;}
+  .tldr .warn b{color:#c2410c;}
+  /* ---------- KPI ---------- */
+  .kpis{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;}
+  .kpi{background:var(--card);border-radius:14px;padding:16px 16px 13px;box-shadow:0 2px 10px rgba(15,23,42,.05);position:relative;overflow:hidden;}
+  .kpi .lab{font-size:12.5px;color:var(--muted);letter-spacing:.5px;}
+  .kpi .val{font-size:24px;font-weight:800;margin-top:3px;letter-spacing:.2px;}
+  .kpi .val small{font-size:13px;font-weight:600;color:var(--muted);margin-left:2px;}
+  .kpi .foot{font-size:12px;color:var(--muted);margin-top:3px;}
+  .kpi .foot em{font-style:normal;color:var(--up);font-weight:700;}
+  .kpi.hl{background:linear-gradient(150deg,#ecfdf5,#f0fdfa);border:1px solid #bbe7d4;}
+  .kpi .ribbon{position:absolute;top:0;right:0;background:var(--brand);color:#fff;font-size:10.5px;padding:2px 9px;border-radius:0 0 0 8px;letter-spacing:1px;}
+  /* ---------- charts ---------- */
+  .chart{width:100%;}
+  .chart-cap{font-size:12.5px;color:var(--muted);margin-top:6px;}
+  .grid2{display:grid;grid-template-columns:1.35fr 1fr;gap:14px;align-items:stretch;}
+  .card h4{font-size:15px;font-weight:800;margin-bottom:8px;}
+  .card h4 .sub{font-weight:500;color:var(--muted);font-size:12.5px;margin-left:8px;}
+  /* ---------- tables ---------- */
+  table{width:100%;border-collapse:collapse;font-size:13.5px;}
+  th,td{padding:8px 10px;text-align:right;white-space:nowrap;}
+  th{background:#f0f6f3;color:#334155;font-weight:700;border-bottom:2px solid #d7e5de;font-size:12.8px;}
+  thead tr.grp th{text-align:center;background:#e4efe9;color:#1f4d3c;letter-spacing:1px;}
+  th:first-child,td:first-child{text-align:left;}
+  tbody td{border-bottom:1px solid #eef2f0;}
+  tbody tr:hover td{background:#f8fbf9;}
+  tfoot td{font-weight:800;border-top:2px solid #cbd8d1;background:#f7faf8;}
+  .dow{color:var(--muted);font-size:12px;margin-left:4px;}
+  .we-row td:first-child .dow{color:var(--brand);font-weight:700;}
+  .min{color:var(--down);font-weight:700;}
+  .max{color:var(--up);font-weight:700;}
+  .rank1{color:#b45309;font-weight:800;}
+  .rank2{color:#0f766e;font-weight:800;}
+  .rank3{color:#047857;font-weight:800;}
+  .delta-up{color:var(--up);font-weight:700;}
+  .delta-down{color:var(--down);font-weight:700;}
+  .footnote{font-size:12.5px;color:var(--muted);margin-top:10px;line-height:1.7;}
+  .footnote b{color:#475569;}
+  /* ---------- anomaly ---------- */
+  .ano-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  .ano{border-radius:14px;padding:18px 20px;border:1px solid var(--line);background:var(--card);}
+  .ano.bad{border-top:4px solid var(--down);}
+  .ano.good{border-top:4px solid var(--up);}
+  .ano .badge{display:inline-block;font-size:12px;font-weight:800;border-radius:6px;padding:2px 10px;letter-spacing:1px;margin-bottom:8px;}
+  .ano.bad .badge{background:#fee2e2;color:#b91c1c;}
+  .ano.good .badge{background:#dcfce7;color:#15803d;}
+  .ano h4{font-size:16px;font-weight:800;}
+  .ano .stats{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0;}
+  .ano .st{background:#f5f7f6;border-radius:9px;padding:6px 12px;font-size:13px;}
+  .ano .st b{font-size:15px;}
+  .ano p{font-size:13.5px;color:#334155;}
+  .ano p.hypo{margin-top:8px;background:#f8fafc;border-left:3px solid #cbd5e1;padding:8px 12px;border-radius:0 8px 8px 0;color:#475569;}
+  .ano p.hypo b{color:#334155;}
+  /* ---------- conclusions ---------- */
+  .concl{display:flex;flex-direction:column;gap:14px;}
+  .concl-item{background:var(--card);border-radius:14px;padding:18px 22px;box-shadow:0 2px 10px rgba(15,23,42,.05);}
+  .concl-item .q{font-size:13px;color:var(--muted);letter-spacing:.5px;}
+  .concl-item .a{font-size:17px;font-weight:800;margin:2px 0 8px;}
+  .concl-item .a .ans{color:var(--brand);}
+  .concl-item ul{padding-left:20px;font-size:13.8px;color:#334155;}
+  .concl-item li{margin:4px 0;}
+  .concl-item b{color:var(--ink);}
+  .invert-box{
+    background:linear-gradient(135deg,#fff7ed,#fefce8);border:1px solid #fde68a;border-radius:14px;
+    padding:16px 20px;margin-top:2px;
+  }
+  .invert-box .a .ans{color:#c2410c !important;}
+  /* ---------- advice ---------- */
+  .adv-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  .adv{background:var(--card);border-radius:14px;padding:18px 20px;border:1px solid var(--line);position:relative;}
+  .adv .pri{position:absolute;top:16px;right:18px;font-size:11.5px;font-weight:800;border-radius:6px;padding:2px 9px;letter-spacing:1px;}
+  .pri.p0{background:#fee2e2;color:#b91c1c;}
+  .pri.p1{background:#fef3c7;color:#b45309;}
+  .adv h4{font-size:15.5px;font-weight:800;padding-right:52px;}
+  .adv .cat{display:inline-block;font-size:12px;color:var(--brand);background:#e7f4ee;border-radius:6px;padding:1px 9px;margin:6px 0 8px;font-weight:700;}
+  .adv p{font-size:13.6px;color:#334155;}
+  .adv p+p{margin-top:7px;}
+  .adv b{color:var(--ink);}
+  /* ---------- footer ---------- */
+  footer{margin-top:34px;background:var(--card);border-radius:16px;padding:20px 24px;box-shadow:0 2px 10px rgba(15,23,42,.05);}
+  footer h4{font-size:14px;font-weight:800;margin-bottom:8px;color:#334155;}
+  footer ul{padding-left:18px;font-size:12.8px;color:var(--muted);}
+  footer li{margin:3px 0;}
+  .sign{margin-top:12px;font-size:12.8px;color:var(--muted);text-align:right;}
+  @media (max-width:900px){
+    .kpis{grid-template-columns:repeat(3,1fr);}
+    .grid2,.ano-grid,.adv-grid{grid-template-columns:1fr;}
+  }
+  @media print{
+    body{background:#fff;}
+    .wrap{padding:0;max-width:none;}
+    .card,.kpi,.ano,.adv,footer{box-shadow:none;border:1px solid var(--line);}
+    section{break-inside:avoid;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ================= HERO ================= -->
+  <header class="hero">
+    <div class="brand-line"><span class="dot"></span>鲜果到家 · 数据部</div>
+    <h1>会员卡销售日报 <span style="font-size:18px;font-weight:600;opacity:.9;">首周特刊</span></h1>
+    <div class="sub">三档会员卡上线首周（09-01 – 09-07）全量复盘 · 含昨日（09-07）日报</div>
+    <div class="meta">
+      <span class="chip">数据周期：<b>09-01 00:00 – 09-07 24:00</b></span>
+      <span class="chip">呈报：<b>管理层晨会 · 09-08 09:00</b></span>
+      <span class="chip">口径：<b>支付成功流水</b>（已核验无折扣/退款）</span>
+      <span class="chip">周末定义：<b>09-06 周六 / 09-07 周日</b></span>
+    </div>
+  </header>
+
+  <!-- ================= TLDR ================= -->
+  <section>
+    <div class="card tldr">
+      <h3><span class="tag">结论先行</span> 30 秒版 —— 老板只看这一段也够用</h3>
+      <ol>
+        <li><b>昨日（09-07 周日）：</b>卖 <b class="num">241 张</b>、收 <b class="num">¥59,129</b>，销量与销售额<b>双创上线以来新高</b>（销售额环比 +9.1%）。</li>
+        <li><b>首周累计：</b><b class="num">1,320 张 / ¥288,780</b>，日均 188.6 张 / ¥41,254。大盘前低后高，D1→D7 销售额 <b class="delta-up">+107.6%</b>。</li>
+        <li><b>增速最快：年卡。</b>日销 8→29 张（<b class="delta-up">+262.5%</b>，季卡 +102.9%、月卡 +17.5%），自 09-05 起单日收入连超季卡，是收入动量最强的档位。</li>
+        <li><b>周末效应：存在，且档位越高越强。</b>周末日均销量 +43.3%、销售额 +61.4%；年卡周末日均 +100.8%（翻倍）&gt; 季卡 +47.0% &gt; 月卡 +34.7%。</li>
+        <li class="warn"><b>一个老板没问但必须知道的事：</b>"哪个档位卖得好"取决于口径——<b>月卡拿走 63.0% 的销量，只贡献 28.5% 的收入；年卡只用 9.0% 的销量，贡献了 37.0% 的收入（收入第一）</b>。且客单价从 ¥175 一路涨到 ¥245（+40.4%），收入结构正快速向高档位迁移。<b>按销量配资源会把预算错配给月卡。</b></li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- ================= 一、核心数据 ================= -->
+  <section>
+    <div class="sec-head"><span class="sec-no">一</span><h2>核心数据</h2><span class="note">每日明细 · 注明口径 · 先给数，再给图</span></div>
+
+    <div class="kpis">
+      <div class="kpi"><div class="lab">首周总销量</div><div class="val num">1,320<small>张</small></div><div class="foot">日均 <span class="num">188.6</span> 张</div></div>
+      <div class="kpi"><div class="lab">首周总销售额</div><div class="val num">¥288,780</div><div class="foot">日均 <span class="num">¥41,254</span></div></div>
+      <div class="kpi hl"><div class="ribbon">昨日</div><div class="lab">09-07 销量</div><div class="val num">241<small>张</small></div><div class="foot"><em>▲ 全周新高</em> · 较 D1 <em>+47.9%</em></div></div>
+      <div class="kpi hl"><div class="ribbon">昨日</div><div class="lab">09-07 销售额</div><div class="val num">¥59,129</div><div class="foot"><em>▲ 全周新高</em> · 较 D1 <em>+107.6%</em></div></div>
+      <div class="kpi"><div class="lab">平均客单价</div><div class="val num">¥218.8</div><div class="foot">D1→D7：<em>¥175 → ¥245（+40.4%）</em></div></div>
+      <div class="kpi"><div class="lab">周末两天贡献</div><div class="val num">39.2%<small>收入</small></div><div class="foot">仅占全周 28.6% 的时间</div></div>
+    </div>
+
+    <div class="grid2" style="margin-top:14px;">
+      <div class="card">
+        <h4>每日总销量 × 总销售额<span class="sub">柱=销量（张，左轴）｜线=销售额（元，右轴）｜绿色底=周末</span></h4>
+        <div id="chartMain" class="chart" style="height:330px;"></div>
+        <div class="chart-cap">09-04 出现"量涨价跌"（详见第二章）；周末两日（09-06/07）以 2/7 的时间贡献 36.4% 销量、39.2% 销售额。</div>
+      </div>
+      <div class="card">
+        <h4>首周结构：销量口径 vs 销售额口径<span class="sub">同一个周，两种答案</span></h4>
+        <div id="chartDonut" class="chart" style="height:330px;"></div>
+        <div class="chart-cap">左：销量口径，月卡 63.0% 一家独大；右：销售额口径，年卡 37.0% 登顶、月卡垫底。<br>占比四舍五入至 1 位小数。</div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:14px;">
+      <h4>每日明细表<span class="sub">单元格颜色深浅=同列内数值高低；<span class="max">▲绿=列内最高</span> / <span class="min">▼红=列内最低</span></span></h4>
+      <div style="overflow-x:auto;">
+      <table class="num" id="tblDaily">
+        <thead>
+          <tr class="grp">
+            <th rowspan="2" style="text-align:left;">日期</th>
+            <th colspan="4">销量（张）</th>
+            <th colspan="4">销售额（元）</th>
+            <th rowspan="2">客单价<br>（元/张）</th>
+          </tr>
+          <tr>
+            <th>月卡99</th><th>季卡269</th><th>年卡899</th><th>合计</th>
+            <th>月卡99</th><th>季卡269</th><th>年卡899</th><th>合计</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>09-01<span class="dow">周一</span></td><td>120</td><td>35</td><td>8</td><td><b>163</b></td><td>11,880</td><td>9,415</td><td>7,192</td><td><b>28,487</b></td><td>174.8</td></tr>
+          <tr><td>09-02<span class="dow">周二</span></td><td>96</td><td>41</td><td>11</td><td><b>148</b></td><td>9,504</td><td>11,029</td><td>9,889</td><td><b>30,422</b></td><td>205.6</td></tr>
+          <tr><td>09-03<span class="dow">周三</span></td><td>88</td><td>52</td><td>15</td><td><b>155</b></td><td>8,712</td><td>13,988</td><td>13,485</td><td><b>36,185</b></td><td>233.5</td></tr>
+          <tr><td>09-04<span class="dow">周四</span></td><td>102</td><td>47</td><td>13</td><td><b>162</b></td><td>10,098</td><td>12,643</td><td>11,687</td><td><b>34,428</b></td><td>212.5</td></tr>
+          <tr><td>09-05<span class="dow">周五</span></td><td>134</td><td>58</td><td>19</td><td><b>211</b></td><td>13,266</td><td>15,602</td><td>17,081</td><td><b>45,949</b></td><td>217.8</td></tr>
+          <tr class="we-row"><td>09-06<span class="dow">周六</span></td><td>150</td><td>66</td><td>24</td><td><b>240</b></td><td>14,850</td><td>17,754</td><td>21,576</td><td><b>54,180</b></td><td>225.8</td></tr>
+          <tr class="we-row"><td>09-07<span class="dow">周日</span></td><td>141</td><td>71</td><td>29</td><td><b>241</b></td><td>13,959</td><td>19,099</td><td>26,071</td><td><b>59,129</b></td><td>245.4</td></tr>
+        </tbody>
+        <tfoot>
+          <tr>
+            <td>首周合计</td>
+            <td>831</td><td>370</td><td>119</td><td>1,320</td>
+            <td>82,269</td><td>99,530</td><td>106,981</td><td>288,780</td>
+            <td>218.8</td>
+          </tr>
+          <tr>
+            <td>结构占比</td>
+            <td>63.0%</td><td>28.0%</td><td>9.0%</td><td>100%</td>
+            <td>28.5%</td><td>34.5%</td><td>37.0%</td><td>100%</td>
+            <td>—</td>
+          </tr>
+        </tfoot>
+      </table>
+      </div>
+      <div class="footnote">
+        <b>口径说明：</b>① 销量口径＝支付成功流水的张数；销售额口径＝当日流水金额（元）。已逐行核验 21 条流水均满足"销售额＝销量×标价"（99/269/899），期间无折扣与退款记录，两口径均可直接加总。
+        ② 客单价＝销售额÷销量；结构占比＝档位÷同口径合计；环比＝较前一日。③ 周末＝09-06（周六）/09-07（周日），按上线日 09-01 为周一的日历；即使改按 09-05/06 为周末，"周末日均高于工作日"的结论不变（详见第三章）。
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:14px;">
+      <h4>首周档位结构表<span class="sub">销量排名 ≠ 收入排名，注意"反差"列</span></h4>
+      <div style="overflow-x:auto;">
+      <table class="num">
+        <thead>
+          <tr>
+            <th>档位</th><th>标价</th><th>首周销量（张）</th><th>销量占比</th><th>销量排名</th>
+            <th>首周销售额（元）</th><th>销售额占比</th><th>收入排名</th><th style="text-align:left;">反差</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td><b>月卡99</b></td><td>¥99</td><td>831</td><td>63.0%</td><td class="rank1">①</td><td>82,269</td><td>28.5%</td><td class="rank3">③</td><td style="text-align:left;">销量第 1，收入垫底 —— 引流量，不是收银台</td></tr>
+          <tr><td><b>季卡269</b></td><td>¥269</td><td>370</td><td>28.0%</td><td class="rank2">②</td><td>99,530</td><td>34.5%</td><td class="rank2">②</td><td style="text-align:left;">销量、收入均居中，走势最稳</td></tr>
+          <tr><td><b>年卡899</b></td><td>¥899</td><td>119</td><td>9.0%</td><td class="rank3">③</td><td>106,981</td><td>37.0%</td><td class="rank1">①</td><td style="text-align:left;">销量第 3，收入第 1 —— 真正的赚钱档位</td></tr>
+        </tbody>
+      </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 二、异常定位 ================= -->
+  <section>
+    <div class="sec-head"><span class="sec-no">二</span><h2>异常定位</h2><span class="note">最差点与亮点 · 原因为猜测，待投放/渠道数据验证</span></div>
+    <div class="ano-grid">
+      <div class="ano bad">
+        <span class="badge">最差点 ①</span>
+        <h4>09-02（周二）：全周销量最低日</h4>
+        <div class="stats num">
+          <span class="st">总销量 <b>148 张</b>（周均 -21.5%）</span>
+          <span class="st">环比 D1 <b class="delta-down">-9.2%</b></span>
+          <span class="st">月卡 <b class="delta-down">120→96（-20%）</b></span>
+        </div>
+        <p>上线次日大盘即回落，其中月卡跌幅最深（-20 张），是当日销量下滑的主因；季卡、年卡反而微升。</p>
+        <p class="hypo"><b>原因猜测：</b>D1 上线脉冲（push／开屏banner／新客礼包）过后自然回落；月卡客群价格敏感、对投放最敏感，资源一撤回落最深——侧面说明<b>月卡自然需求偏弱，靠活动拉动的成分大</b>。</p>
+      </div>
+      <div class="ano bad">
+        <span class="badge">最差点 ②</span>
+        <h4>09-04（周四）：全周唯一销售额环比下滑日</h4>
+        <div class="stats num">
+          <span class="st">销售额 <b class="delta-down">-4.9%</b>（¥36,185→¥34,428）</span>
+          <span class="st">销量却 <b class="delta-up">+4.5%</b></span>
+          <span class="st">季卡 <b class="delta-down">52→47</b> / 年卡 <b class="delta-down">15→13</b></span>
+        </div>
+        <p>销量涨、收入跌，是典型的"结构变差"：跌的都是高客单档位，补量的是低客单月卡（88→102，月卡全周最低点出现在前一天 09-03）。</p>
+        <p class="hypo"><b>原因猜测：</b>周中缺乏大额消费决策场景，高价卡转化向周末集中；09-03 季卡/年卡的小高峰（52/15 张）疑似渠道进货或小团单，持续性存疑，需渠道数据验证。</p>
+      </div>
+      <div class="ano good">
+        <span class="badge">亮点 ①</span>
+        <h4>09-07（周日）：销量、销售额双新高，年卡创纪录</h4>
+        <div class="stats num">
+          <span class="st"><b>241 张 / ¥59,129</b></span>
+          <span class="st">年卡 <b>29 张 / ¥26,071</b> 单日纪录</span>
+          <span class="st">年卡占当日收入 <b class="delta-up">44.1%</b></span>
+        </div>
+        <p>当日年卡收入达月卡的 <b>1.9 倍</b>（¥26,071 vs ¥13,959）——只占当日 12% 销量的年卡，贡献了近一半收入。</p>
+        <p class="hypo"><b>原因猜测：</b>周末家庭共同决策场景（家庭生鲜采购、整年伙食规划）利好高价卡，与"周末效应随档位放大"（第三章）互为印证。</p>
+      </div>
+      <div class="ano good">
+        <span class="badge">亮点 ②</span>
+        <h4>年卡"以一敌三"：连续 6 天单日收入超过月卡</h4>
+        <div class="stats num">
+          <span class="st">09-02 起 <b>6/6 天</b> 年卡日收入 &gt; 月卡</span>
+          <span class="st">09-05 起 <b>3/3 天</b> 年卡日收入 &gt; 季卡</span>
+          <span class="st">9% 销量 → <b class="delta-up">37.0%</b> 收入</span>
+        </div>
+        <p>自上线第二天起，年卡每天赚得都比销量是其 6 倍多的月卡多；09-05 起再超季卡，成为单日收入第一档位并逐日扩大领先。</p>
+        <p class="hypo"><b>含义：</b>高价卡的需求被低估了。若首周把年卡当作"放着看看"的长尾商品，相当于把增长最快的收入引擎当配角运营。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 三、趋势与结构 ================= -->
+  <section>
+    <div class="sec-head"><span class="sec-no">三</span><h2>趋势与结构结论</h2><span class="note">先回答老板问的，再给老板没问的</span></div>
+    <div class="concl">
+      <div class="concl-item">
+        <div class="q">趋势结论 ① ｜ 哪个档位增速最快？</div>
+        <div class="a">答案：<span class="ans">年卡</span>（日销 8→29 张，+262.5%），且不只增速快，收入规模也已反超</div>
+        <ul>
+          <li>销量增速：年卡 <b class="delta-up">+262.5%</b> ＞ 季卡 +102.9% ＞ 月卡 +17.5%（价格恒定，各档销售额增速与销量增速相同）。</li>
+          <li>指数化对比（D1=100）：D7 时<b>年卡 362.5 / 季卡 202.9 / 月卡 117.5</b> —— 月卡在 D2-D3 探底后仅温和修复，年卡几乎每个周末都在跳升。</li>
+          <li>收入位次变化：09-01 当天月卡收入第一；<b>09-02 起年卡、季卡双双反超月卡；09-05 起年卡再超季卡</b>，连续 3 天保持单日收入第一。</li>
+        </ul>
+        <div id="chartGrow" class="chart" style="height:340px;margin-top:8px;"></div>
+        <div class="chart-cap">纵轴＝销量指数（09-01=100）；括号内为 D1→D7 累计增速。</div>
+      </div>
+      <div class="concl-item">
+        <div class="q">趋势结论 ② ｜ 周末效应存在吗？</div>
+        <div class="a">答案：<span class="ans">存在，且档位越高越强</span> —— 周末日均销量 +43.3%、销售额 +61.4%</div>
+        <ul>
+          <li>整体：周末日均 <b>240.5 张 / ¥56,655</b> vs 工作日日均 167.8 张 / ¥35,094；周末两天以 28.6% 的时间贡献了 <b>36.4% 销量 / 39.2% 收入</b>。</li>
+          <li><b>档位越高，周末弹性越大</b>：销量日均提升 月卡 +34.7% ＜ 季卡 +47.0% ＜ 年卡 +100.8%（翻倍）；周末集中度（该档周末销量占其全周比重）同样递增：44.5% ＞ 37.0% ＞ 35.0%。</li>
+          <li><b>稳健性检验：</b>即使把周末改定义为 09-05/06，周末日均（225.5 张 / ¥50,065）仍显著高于工作日（173.8 张 / ¥37,730），结论不依赖周末的具体定义。</li>
+          <li>解释（猜测）：生鲜采购、家庭用餐等场景集中在周末，年卡这类家庭共担的大额决策更易周末成交；月卡偏个人即时决策，弹性最小。</li>
+        </ul>
+        <div id="chartWeekend" class="chart" style="height:290px;margin-top:8px;"></div>
+        <div class="chart-cap" style="margin-top:-2px;">柱为日均销量（张/天）；括号内为该档周末日均相对工作日日均的提升幅度。收入口径同幅度提升：年卡日均收入由 ¥11,867（=59,334÷5）增至 ¥23,824（=(21,576+26,071)÷2）。</div>
+      </div>
+      <div class="invert-box">
+        <div class="q" style="font-size:13px;color:#92400e;letter-spacing:.5px;">结构结论 ③ ｜ 老板没问、但应该知道的事</div>
+        <div class="a" style="font-size:17px;font-weight:800;margin:2px 0 8px;color:#78350f;">"卖得好"和"赚得多"不是同一个档位：收入结构正在快速向年卡迁移</div>
+        <ul style="padding-left:20px;font-size:13.8px;color:#57430d;">
+          <li>销量口径：月卡 63.0% 一家独大；<b>销售额口径：年卡 37.0% ＞ 季卡 34.5% ＞ 月卡 28.5%</b>。若只按"卖了多少张"定资源，预算会系统性错配给收入贡献最低的月卡。</li>
+          <li>客单价从 D1 的 ¥175 一路升至 D7 的 ¥245（<b>+40.4%</b>）：即便总销量不再增长，结构升级也在自动抬高收入天花板。</li>
+          <li>一句话：<b>月卡是流量入口，年卡是利润引擎</b>。首周数据支持"用月卡拉人、用季卡/年卡赚钱"的双档位打法。</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 四、建议 ================= -->
+  <section>
+    <div class="sec-head"><span class="sec-no">四</span><h2>给业务方的建议</h2><span class="note">可直接执行 · 按优先级排序</span></div>
+    <div class="adv-grid">
+      <div class="adv">
+        <span class="pri p0">P0 · 投放</span>
+        <h4>投放资源按"周中引流、周末收割"重排</h4>
+        <span class="cat">投放建议</span>
+        <p>工作日投放主打<b>月卡拉新蓄水</b>；<b>周五晚—周日</b>把 banner、push、社群资源集中导向<b>季卡与年卡</b>——高档位周末转化约为工作日的 1.5–2 倍（年卡 2 倍）。</p>
+        <p>预期：按当前弹性，仅把周末高档位曝光补足到工作日强度，即可再抬升周末收入；建议下周做一轮预算重排的小流量 A/B 验证。</p>
+      </div>
+      <div class="adv">
+        <span class="pri p0">P0 · 定价/产品</span>
+        <h4>上线"月卡升级补差"机制，把 831 张月卡变成升级漏斗</h4>
+        <span class="cat">定价建议</span>
+        <p>月卡用户 30 天内升级季卡/年卡可<b>抵扣已付的 ¥99</b>，配合到期前 7 天定向 push。首周 831 张月卡（63% 销量）是现成的转化池，升级主推<b>年卡</b>（当前热度最高、客单最高）。</p>
+        <p>锚点：年卡 D7 单日已卖 29 张、贡献 44% 当日收入，升级链路补上后，年卡有望从"周末脉冲"变成"日销常量"。</p>
+      </div>
+      <div class="adv">
+        <span class="pri p1">P1 · 定价测试</span>
+        <h4>季卡 269 是稳健价格带；年卡可小流量试高阶档</h4>
+        <span class="cat">定价建议</span>
+        <p>季卡首周 370 张、收入占比 34.5% 且波动最小，269 价点接受度良好，可 A/B 测试"<b>季卡 299 + 权益包</b>"；年卡 899 周末翻倍、有供不应求迹象，可小流量测试 <b>¥1,099 高阶档</b>，或先对年卡叠加差异化权益（优先配送/坏果必赔）做增值，再择机提价。</p>
+      </div>
+      <div class="adv">
+        <span class="pri p1">P1 · 数据</span>
+        <h4>下版日报增加三个拆分口径，防止误读</h4>
+        <span class="cat">数据提醒</span>
+        <p>周末效应仅 1 周样本，D1 脉冲与自然增长尚未拆开。建议日报增加：<b>① 新客 vs 老客；② 投放 vs 自然流量；③ 各档位投放 ROI</b>——避免把上线脉冲误读为自然趋势、把预算继续押在低收入的销量口径上。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FOOTER ================= -->
+  <footer>
+    <h4>附录：口径与假设</h4>
+    <ul>
+      <li>数据范围：会员卡上线首周 09-01 至 09-07，按"自然日 × 档位"汇总的支付成功流水；共 21 条明细。</li>
+      <li>数据质量：逐行核验"销售额＝销量×标价"（¥99 / ¥269 / ¥899）全部吻合，期间无折扣、退款记录；各表合计数均由明细直接相加。</li>
+      <li>指标定义：客单价＝销售额÷销量；结构占比＝档位÷同口径合计（四舍五入至 1 位小数）；环比＝较前一日；周末＝09-06（六）/09-07（日），按 09-01 为周一的日历。</li>
+      <li>因果说明：第二章"原因猜测"、第三章周末效应解释均为假设，需投放、渠道、用户分层数据验证；建议下周复核。</li>
+    </ul>
+    <div class="sign">制表：数据部 ｜ 呈报：管理层晨会 09-08 09:00 ｜ 下一版日报：09-09 09:00</div>
+  </footer>
+</div>
+
+<script>
+/* ================= 数据（已与源流水逐行核对） ================= */
+const DAYS=['09-01','09-02','09-03','09-04','09-05','09-06','09-07'];
+const DOW=['一','二','三','四','五','六','日'];
+const volM=[120,96,88,102,134,150,141], volQ=[35,41,52,47,58,66,71], volY=[8,11,15,13,19,24,29];
+const revM=[11880,9504,8712,10098,13266,14850,13959];
+const revQ=[9415,11029,13988,12643,15602,17754,19099];
+const revY=[7192,9889,13485,11687,17081,21576,26071];
+const totVol=volM.map((v,i)=>v+volQ[i]+volY[i]);
+const totRev=revM.map((v,i)=>v+revQ[i]+revY[i]);
+const atv=totRev.map((v,i)=>v/totVol[i]);
+const C={m1:'#f59e0b',m2:'#14b8a6',m3:'#059669',indigo:'#4f46e5',brand:'#0e7a55',muted:'#94a3b8'};
+const FONT={fontFamily:'-apple-system,PingFang SC,Hiragino Sans GB,Microsoft YaHei,sans-serif'};
+const charts=[];
+function mk(id,opt){const el=document.getElementById(id);if(!el)return null;const c=echarts.init(el,null,{renderer:'canvas'});opt.animation=false;opt.textStyle=FONT;c.setOption(opt);charts.push(c);return c;}
+/* x 轴为两行类目标签，markArea 用类目索引定位（4.5→6.5 覆盖 09-06、09-07 两个完整条带） */
+const weekendMarkArea={silent:true,itemStyle:{color:'rgba(16,185,129,0.10)'},label:{show:true,position:'insideTop',color:'#059669',fontSize:11,fontWeight:700},data:[[{name:'周末',xAxis:4.5},{xAxis:6.5}]]};
+
+/* ---- 图1：每日总销量×总销售额 ---- */
+mk('chartMain',{
+  grid:{left:52,right:62,top:36,bottom:46},
+  legend:{top:0,left:0,itemWidth:14,itemHeight:9,textStyle:{fontSize:12,color:'#475569'},data:['总销量（张）','总销售额（元）']},
+  tooltip:{trigger:'axis',backgroundColor:'rgba(15,23,42,.92)',borderWidth:0,textStyle:{color:'#fff',fontSize:12}},
+  xAxis:{type:'category',data:DAYS.map((d,i)=>d+'\n周'+DOW[i]),axisLine:{lineStyle:{color:'#cbd5e1'}},axisTick:{show:false},axisLabel:{color:'#64748b',fontSize:11.5,interval:0,lineHeight:15,margin:10}},
+  yAxis:[
+    {type:'value',min:0,max:300,splitLine:{lineStyle:{color:'#eef2f0'}},axisLabel:{color:'#64748b',fontSize:11}},
+    {type:'value',min:0,max:70000,splitLine:{show:false},axisLabel:{color:'#64748b',fontSize:11,formatter:v=>(v/1000)+'k'}}
+  ],
+  series:[
+    /* 仅 09-07（i=6）折线位于柱顶上方，其标签放柱体内部；其余各天折线在柱顶下方或恰在柱顶，柱顶标签无遮挡 */
+    {name:'总销量（张）',type:'bar',z:1,barWidth:26,itemStyle:{borderRadius:[6,6,0,0],color:{type:'linear',x:0,y:0,x2:0,y2:1,colorStops:[{offset:0,color:'#34d399'},{offset:1,color:'#a7e8cd'}]}},
+     data:totVol.map((v,i)=>({value:v,label:(i===6)?{show:true,position:'insideTop',distance:6,color:'#065f46',fontSize:11,fontWeight:700}:{show:true,position:'top',distance:5,color:'#047857',fontSize:11,fontWeight:700}})),
+     markArea:weekendMarkArea},
+    {name:'总销售额（元）',type:'line',yAxisIndex:1,z:3,data:totRev,smooth:.35,symbol:'circle',symbolSize:7,lineStyle:{width:3,color:C.indigo},itemStyle:{color:C.indigo,borderColor:'#fff',borderWidth:2},label:{show:true,position:'top',distance:8,color:C.indigo,fontSize:10.5,fontWeight:700,formatter:p=>p.dataIndex===0||p.dataIndex===6?p.value.toLocaleString():''}}
+  ]
+});
+
+/* ---- 图2：双环（销量结构 vs 销售额结构） ---- */
+const tierData=(names,vals,pcts)=>names.map((n,i)=>({name:n,value:vals[i],label:{formatter:pcts[i]}}));
+mk('chartDonut',{
+  tooltip:{backgroundColor:'rgba(15,23,42,.92)',borderWidth:0,textStyle:{color:'#fff',fontSize:12},formatter:p=>p.name+'：'+p.value.toLocaleString()+'（'+p.percent+'%）'},
+  legend:{bottom:0,itemWidth:12,itemHeight:8,textStyle:{fontSize:12,color:'#475569'}},
+  title:[
+    {text:'销量口径（张）',subtext:'月卡 63.0% 主导',left:'24.5%',top:'2%',textAlign:'center',textStyle:{fontSize:13,color:'#334155',fontWeight:700},subtextStyle:{fontSize:11.5,color:'#94a3b8'}},
+    {text:'销售额口径（元）',subtext:'年卡 37.0% 登顶',left:'75.5%',top:'2%',textAlign:'center',textStyle:{fontSize:13,color:'#334155',fontWeight:700},subtextStyle:{fontSize:11.5,color:'#94a3b8'}}
+  ],
+  series:[
+    {type:'pie',radius:['42%','64%'],center:['24.5%','54%'],avoidLabelOverlap:false,data:tierData(['月卡 831','季卡 370','年卡 119'],[831,370,119],['63.0%','28.0%','9.0%']),label:{position:'inside',fontSize:11.5,color:'#fff',fontWeight:700,textBorderColor:'rgba(15,23,42,0.35)',textBorderWidth:2},labelLine:{show:false},itemStyle:{borderColor:'#fff',borderWidth:2},color:[C.m1,C.m2,C.m3]},
+    {type:'pie',radius:['42%','64%'],center:['75.5%','54%'],avoidLabelOverlap:false,data:tierData(['月卡 ¥82,269','季卡 ¥99,530','年卡 ¥106,981'],[82269,99530,106981],['28.5%','34.5%','37.0%']),label:{position:'inside',fontSize:11.5,color:'#fff',fontWeight:700,textBorderColor:'rgba(15,23,42,0.35)',textBorderWidth:2},labelLine:{show:false},itemStyle:{borderColor:'#fff',borderWidth:2},color:[C.m1,C.m2,C.m3]}
+  ]
+});
+
+/* ---- 图3：指数化增速（D1=100） ---- */
+const idx=(arr)=>arr.map(v=>+(v/arr[0]*100).toFixed(1));
+mk('chartGrow',{
+  grid:{left:46,right:86,top:36,bottom:50},
+  tooltip:{trigger:'axis',backgroundColor:'rgba(15,23,42,.92)',borderWidth:0,textStyle:{color:'#fff',fontSize:12},valueFormatter:v=>v},
+  legend:{top:0,left:0,itemWidth:18,itemHeight:3,itemGap:20,textStyle:{fontSize:12,color:'#475569'}},
+  xAxis:{type:'category',data:DAYS.map((d,i)=>d+'\n周'+DOW[i]),boundaryGap:false,axisLine:{lineStyle:{color:'#cbd5e1'}},axisTick:{show:false},axisLabel:{color:'#64748b',fontSize:11.5,interval:0,lineHeight:15,margin:10}},
+  yAxis:{type:'value',min:60,max:400,splitLine:{lineStyle:{color:'#eef2f0'}},axisLabel:{color:'#64748b',fontSize:11}},
+  series:[
+    {name:'月卡99（+17.5%）',type:'line',data:idx(volM),smooth:.3,symbol:'circle',symbolSize:6,lineStyle:{width:2.5,color:C.m1},itemStyle:{color:C.m1},endLabel:{show:true,formatter:'117.5',color:C.m1,fontWeight:800,fontSize:12}},
+    {name:'季卡269（+102.9%）',type:'line',data:idx(volQ),smooth:.3,symbol:'circle',symbolSize:6,lineStyle:{width:2.5,color:C.m2},itemStyle:{color:C.m2},endLabel:{show:true,formatter:'202.9',color:C.m2,fontWeight:800,fontSize:12}},
+    {name:'年卡899（+262.5%）',type:'line',data:idx(volY),smooth:.3,symbol:'circle',symbolSize:6,lineStyle:{width:3,color:C.m3},itemStyle:{color:C.m3},endLabel:{show:true,formatter:'362.5',color:C.m3,fontWeight:800,fontSize:13},
+     markLine:{silent:true,symbol:'none',lineStyle:{type:'dashed',color:'#cbd5e1'},label:{formatter:'D1 基线 100',fontSize:10.5,color:'#94a3b8'},data:[{yAxis:100}]}}
+  ]
+});
+
+/* ---- 图4：周末 vs 工作日（日均销量） ---- */
+mk('chartWeekend',{
+  grid:{left:56,right:20,top:36,bottom:28},
+  tooltip:{trigger:'axis',backgroundColor:'rgba(15,23,42,.92)',borderWidth:0,textStyle:{color:'#fff',fontSize:12},valueFormatter:v=>v+' 张/天'},
+  legend:{top:0,left:0,itemWidth:14,itemHeight:9,textStyle:{fontSize:12,color:'#475569'}},
+  xAxis:{type:'category',data:['月卡99','季卡269','年卡899','整体'],axisLine:{lineStyle:{color:'#cbd5e1'}},axisTick:{show:false},axisLabel:{color:'#334155',fontSize:12.5,fontWeight:700,interval:0}},
+  yAxis:{type:'value',splitLine:{lineStyle:{color:'#eef2f0'}},axisLabel:{color:'#64748b',fontSize:11}},
+  series:[
+    {name:'工作日日均（周一至周五）',type:'bar',data:[108.0,46.6,13.2,167.8],barWidth:20,itemStyle:{borderRadius:[5,5,0,0],color:'#cbd5e1'},label:{show:true,position:'top',color:'#64748b',fontSize:11}},
+    {name:'周末日均（周六/周日）',type:'bar',data:[145.5,68.5,26.5,240.5],barWidth:20,itemStyle:{borderRadius:[5,5,0,0],color:{type:'linear',x:0,y:0,x2:0,y2:1,colorStops:[{offset:0,color:'#059669'},{offset:1,color:'#34d399'}]}},label:{show:true,position:'top',color:'#059669',fontSize:11,fontWeight:800,formatter:p=>'+'+['34.7%','47.0%','100.8%','43.3%'][p.dataIndex]}}
+  ]
+});
+
+/* ---- 明细表热力着色 + 最高/最低标记 ---- */
+(function(){
+  const tbl=document.getElementById('tblDaily');if(!tbl)return;
+  const rows=[...tbl.querySelectorAll('tbody tr')];
+  const nCol=10;
+  const colVals=[];
+  for(let c=1;c<nCol;c++){
+    colVals[c]=rows.map(r=>parseFloat(r.children[c].textContent.replace(/,/g,'')));
+  }
+  const tint=(base,a)=>'rgba('+base+','+a.toFixed(2)+')';
+  const colRGB={1:'245,158,11',2:'20,184,166',3:'5,150,105',4:'99,102,241',5:'245,158,11',6:'20,184,166',7:'5,150,105',8:'99,102,241',9:'99,102,241'};
+  for(let c=1;c<nCol;c++){
+    const vs=colVals[c],mn=Math.min(...vs),mx=Math.max(...vs);
+    rows.forEach((r,i)=>{
+      const t=(vs[i]-mn)/(mx-mn||1);
+      r.children[c].style.background=tint(colRGB[c],0.06+0.34*t);
+      if(vs[i]===mx)r.children[c].innerHTML+=' <span class="max">▲</span>';
+      else if(vs[i]===mn)r.children[c].innerHTML+=' <span class="min">▼</span>';
+    });
+  }
+})();
+window.addEventListener('resize',()=>charts.forEach(c=>c.resize()));
+</script>
+</body>
+</html>

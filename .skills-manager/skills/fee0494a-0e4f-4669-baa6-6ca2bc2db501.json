@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "skill_id": "fee0494a-0e4f-4669-baa6-6ca2bc2db501",
+  "path": "代码审查-3",
+  "path_key": "代码审查-3",
+  "enabled": true,
+  "tags": [],
+  "source": {
+    "type": "import",
+    "ref": null,
+    "subpath": null,
+    "branch": null
+  }
+}

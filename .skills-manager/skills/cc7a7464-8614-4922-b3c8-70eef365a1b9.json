@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "skill_id": "cc7a7464-8614-4922-b3c8-70eef365a1b9",
+  "path": "front-hzero-build-deploy-2",
+  "path_key": "front-hzero-build-deploy-2",
+  "enabled": true,
+  "tags": [],
+  "source": {
+    "type": "import",
+    "ref": null,
+    "subpath": null,
+    "branch": null
+  }
+}
